@@ -4,14 +4,18 @@ import { useEffect, useCallback, useState } from "react";
 import { useOutlineTree } from "@/hooks/useOutlineTree";
 import OutlineTree from "@/components/outline/OutlineTree";
 import ContentEditor from "@/components/outline/ContentEditor";
+import ProjectTitleBar from "@/components/outline/ProjectTitleBar";
 import { flattenTree } from "@/lib/outline-utils";
 import { signOut } from "next-auth/react";
 
 interface OutlineAppProps {
   projectId: string;
+  title: string;
+  subtitle: string | null;
+  hasApiKey: boolean;
 }
 
-export default function OutlineApp({ projectId }: OutlineAppProps) {
+export default function OutlineApp({ projectId, title, subtitle, hasApiKey }: OutlineAppProps) {
   const { state, dispatch, loadTree, select, handleAdd, handleUpdate, handleDelete, handleMove } =
     useOutlineTree(projectId);
 
@@ -49,11 +53,10 @@ export default function OutlineApp({ projectId }: OutlineAppProps) {
   return (
     <div className="flex flex-1 h-screen">
       {/* Left: Outline tree */}
-      <div className="w-80 shrink-0 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto bg-zinc-50 dark:bg-zinc-950">
-        <div className="sticky top-0 z-10 px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between">
-          <h1 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-            论文大纲
-          </h1>
+      <div className="w-96 shrink-0 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto bg-zinc-50 dark:bg-zinc-950">
+        <ProjectTitleBar projectId={projectId} title={title} subtitle={subtitle} />
+        <div className="sticky top-0 z-10 px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between">
+          <span className="text-xs font-medium text-zinc-500">大纲</span>
           <div className="flex items-center gap-2">
             <div className="relative">
               <button
@@ -107,7 +110,7 @@ export default function OutlineApp({ projectId }: OutlineAppProps) {
 
       {/* Right: Content editor */}
       <div className="flex-1 overflow-y-auto">
-        <ContentEditor node={selectedNode} onUpdate={handleUpdate} />
+        <ContentEditor node={selectedNode} onUpdate={handleUpdate} hasApiKey={hasApiKey} />
       </div>
     </div>
   );

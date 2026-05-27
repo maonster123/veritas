@@ -40,5 +40,12 @@ export default async function Home() {
     });
   }
 
-  return <OutlineApp projectId={project.id} />;
+  // Check if user has DeepSeek API key
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { deepseekApiKey: true },
+  });
+  const hasApiKey = !!user?.deepseekApiKey;
+
+  return <OutlineApp projectId={project.id} title={project.title} subtitle={project.subtitle} hasApiKey={hasApiKey} />;
 }

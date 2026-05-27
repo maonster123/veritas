@@ -7,6 +7,7 @@ export interface FlatNode {
   type: "chapter" | "section" | "subsection" | "paragraph";
   content: string | null;
   notes: string | null;
+  aiContent: string | null;
   children: FlatNode[];
   outlineReferences?: {
     id: string;
