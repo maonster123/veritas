@@ -32,7 +32,74 @@ enum CitationFormatType {
 }
 
 // ──────────────────────────────────────────────
-// 1. Project
+// 1. User
+// ──────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  projects  Project[]
+  accounts  Account[]
+  sessions  Session[]
+}
+
+// ──────────────────────────────────────────────
+// 2. Account (Auth.js)
+// ──────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// ──────────────────────────────────────────────
+// 3. Session (Auth.js)
+// ──────────────────────────────────────────────
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ──────────────────────────────────────────────
+// 4. VerificationToken (Auth.js)
+// ──────────────────────────────────────────────
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ──────────────────────────────────────────────
+// 5. Project
 // ──────────────────────────────────────────────
 
 model Project {
@@ -43,6 +110,8 @@ model Project {
   status      ProjectStatus @default(draft)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  userId      String?
+  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   outlineNodes   OutlineNode[]
   references     Reference[]
@@ -51,7 +120,7 @@ model Project {
 }
 
 // ──────────────────────────────────────────────
-// 2. OutlineNode
+// 6. OutlineNode
 // ──────────────────────────────────────────────
 
 model OutlineNode {
@@ -77,7 +146,7 @@ model OutlineNode {
 }
 
 // ──────────────────────────────────────────────
-// 3. Reference
+// 7. Reference
 // ──────────────────────────────────────────────
 
 model Reference {
@@ -106,7 +175,7 @@ model Reference {
 }
 
 // ──────────────────────────────────────────────
-// 4. OutlineReference
+// 8. OutlineReference
 // ──────────────────────────────────────────────
 
 model OutlineReference {
@@ -122,7 +191,7 @@ model OutlineReference {
 }
 
 // ──────────────────────────────────────────────
-// 5. FormatRule
+// 9. FormatRule
 // ──────────────────────────────────────────────
 
 model FormatRule {
@@ -138,7 +207,7 @@ model FormatRule {
 }
 
 // ──────────────────────────────────────────────
-// 6. CitationStyle
+// 10. CitationStyle
 // ──────────────────────────────────────────────
 
 model CitationStyle {
@@ -151,7 +220,7 @@ model CitationStyle {
 }
 
 // ──────────────────────────────────────────────
-// 7. ProjectCitationStyle
+// 11. ProjectCitationStyle
 // ──────────────────────────────────────────────
 
 model ProjectCitationStyle {

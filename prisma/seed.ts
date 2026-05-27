@@ -1,5 +1,6 @@
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import bcrypt from "bcryptjs";
 
 const adapter = new PrismaLibSql({
   url: process.env.DATABASE_URL ?? "file:./dev.db",
@@ -15,6 +16,21 @@ async function main() {
   await prisma.formatRule.deleteMany();
   await prisma.citationStyle.deleteMany();
   await prisma.project.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.session.deleteMany();
+  await prisma.verificationToken.deleteMany();
+  await prisma.user.deleteMany();
+
+  // Create test user
+  const passwordHash = await bcrypt.hash("test123", 12);
+  const user = await prisma.user.create({
+    data: {
+      name: "Test User",
+      email: "test@example.com",
+      passwordHash,
+    },
+  });
+  console.log("Created test user:", user.email);
 
   // Create citation styles
   const gbt = await prisma.citationStyle.create({
@@ -68,6 +84,7 @@ async function main() {
       title: "基于深度学习的自然语言处理研究",
       subtitle: "以机器翻译为例",
       status: "draft",
+      userId: user.id,
     },
   });
   console.log("Created project:", project.title);
