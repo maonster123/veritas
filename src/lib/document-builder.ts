@@ -1,6 +1,7 @@
 import { parseMarkdown, type ParsedSegment } from "./markdown-parser";
 import type { FlatNode } from "./outline-utils";
 import { flattenTree } from "./outline-utils";
+import { formatReferenceEntry, type ReferenceData } from "./citation-formatter";
 
 export interface FormatConfig {
   pageMargins: { top: number; bottom: number; left: number; right: number };
@@ -13,6 +14,7 @@ export interface FormatConfig {
 export interface CitationConfig {
   formatType: "numeric" | "author_year" | "author_page";
   template: Record<string, string>;
+  styleName?: string;
 }
 
 export interface DocumentData {
@@ -30,6 +32,17 @@ export interface DocumentSection {
   segments: ParsedSegment[];
   citations: string[];
   children: DocumentSection[];
+}
+
+interface RefMeta {
+  id: string;
+  title: string;
+  year: number | null;
+  authors: string;
+  journal: string | null;
+  volume: string | null;
+  issue: string | null;
+  pages: string | null;
 }
 
 function getNodeLevel(node: FlatNode, tree: FlatNode[]): number {
@@ -50,7 +63,7 @@ export function buildDocument(
   formatConfig: FormatConfig,
   citationConfig: CitationConfig
 ): DocumentData {
-  const referencesList: { id: string; text: string }[] = [];
+  const referencesMap = new Map<string, RefMeta>();
 
   function buildSections(nodes: FlatNode[]): DocumentSection[] {
     return nodes.map((node) => {
@@ -63,8 +76,17 @@ export function buildDocument(
           if (or.citationText) {
             citations.push(or.citationText);
           }
-          if (!referencesList.find((r) => r.id === or.reference.id)) {
-            referencesList.push({ id: or.reference.id, text: "" });
+          if (!referencesMap.has(or.reference.id)) {
+            referencesMap.set(or.reference.id, {
+              id: or.reference.id,
+              title: or.reference.title,
+              year: (or.reference as any).year ?? null,
+              authors: (or.reference as any).authors ?? "[]",
+              journal: (or.reference as any).journal ?? null,
+              volume: (or.reference as any).volume ?? null,
+              issue: (or.reference as any).issue ?? null,
+              pages: (or.reference as any).pages ?? null,
+            });
           }
         }
       }
@@ -83,18 +105,26 @@ export function buildDocument(
 
   const sections = buildSections(tree);
 
-  const refEntries = referencesList.map((ref, index) => {
+  const refEntries = Array.from(referencesMap.values()).map((ref, index) => {
     const num = index + 1;
-    const refRecord = flattenTree(tree)
-      .find((n) =>
-        n.outlineReferences?.some((or) => or.reference.id === ref.id)
-      );
-    const fullRef = refRecord?.outlineReferences?.find(
-      (or) => or.reference.id === ref.id
-    )?.reference;
-    const text = fullRef
-      ? `[${num}] ${fullRef.title}${fullRef.year ? ` (${fullRef.year})` : ""}`
-      : `[${num}] Reference ${ref.id}`;
+    const refData: ReferenceData = {
+      id: ref.id,
+      title: ref.title,
+      authors: ref.authors,
+      journal: ref.journal,
+      volume: ref.volume,
+      issue: ref.issue,
+      pages: ref.pages,
+      year: ref.year,
+      publisher: null,
+      url: null,
+      doi: null,
+    };
+    const text = formatReferenceEntry(refData, {
+      name: citationConfig.styleName ?? "",
+      formatType: citationConfig.formatType,
+      template: citationConfig.template,
+    }, num);
     return { index: num, text, id: ref.id };
   });
 

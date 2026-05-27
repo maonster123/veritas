@@ -11,7 +11,7 @@ export async function getOutlineTree(projectId: string) {
     orderBy: { sortOrder: "asc" },
     include: {
       outlineReferences: {
-        include: { reference: { select: { id: true, title: true, year: true } } },
+        include: { reference: { select: { id: true, title: true, year: true, authors: true, journal: true, volume: true, issue: true, pages: true } } },
       },
     },
   });

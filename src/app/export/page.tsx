@@ -2,7 +2,7 @@ import React from "react";
 import { prisma } from "@/lib/prisma";
 import { getOutlineTree } from "@/app/actions/outline";
 import { buildTree } from "@/lib/outline-utils";
-import { buildDocument, type FormatConfig } from "@/lib/document-builder";
+import { buildDocument, type FormatConfig, type CitationConfig } from "@/lib/document-builder";
 import type { ParsedInline } from "@/lib/markdown-parser";
 import PrintButton from "@/components/export/PrintButton";
 
@@ -41,10 +41,19 @@ export default async function ExportPage({
         headerFooter: {},
       };
 
-  const docData = buildDocument(project, tree, formatConfig, {
-    formatType: "numeric",
-    template: {},
+  const activeStyle = await prisma.projectCitationStyle.findFirst({
+    where: { projectId, isActive: true },
+    include: { citationStyle: true },
   });
+  const citationConfig: CitationConfig = activeStyle?.citationStyle
+    ? {
+        formatType: activeStyle.citationStyle.formatType as CitationConfig["formatType"],
+        template: JSON.parse(activeStyle.citationStyle.template),
+        styleName: activeStyle.citationStyle.name,
+      }
+    : { formatType: "numeric", template: {} };
+
+  const docData = buildDocument(project, tree, formatConfig, citationConfig);
 
   const fontFamily = formatConfig.bodyFont.family;
   const fontSize = formatConfig.bodyFont.size;

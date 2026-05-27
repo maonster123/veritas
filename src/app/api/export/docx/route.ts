@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
     ? {
         formatType: activeStyle.citationStyle.formatType as CitationConfig["formatType"],
         template: JSON.parse(activeStyle.citationStyle.template),
+        styleName: activeStyle.citationStyle.name,
       }
     : { formatType: "numeric", template: {} };
 
