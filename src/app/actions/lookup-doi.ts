@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@/lib/auth";
 import { resolveDOI } from "@/lib/doi-resolver";
 import { prisma } from "@/lib/prisma";
 
@@ -21,6 +22,15 @@ export async function lookupAndSaveDOI(
   doi: string
 ): Promise<LookupResult> {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "请先登录" };
+    }
+    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { userId: true } });
+    if (!project || project.userId !== session.user.id) {
+      return { success: false, error: "无权操作该项目" };
+    }
+
     // Check if DOI already exists in this project
     const existing = await prisma.reference.findUnique({
       where: { projectId_doi: { projectId, doi } },

@@ -9,12 +9,18 @@ import {
   convertMillimetersToTwip,
 } from "docx";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import { getOutlineTree } from "@/app/actions/outline";
 import { buildTree } from "@/lib/outline-utils";
 import { buildDocument, type FormatConfig, type CitationConfig } from "@/lib/document-builder";
 import type { ParsedInline } from "@/lib/markdown-parser";
 
 export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const projectId = request.nextUrl.searchParams.get("projectId");
   if (!projectId) {
     return NextResponse.json({ error: "Missing projectId" }, { status: 400 });
@@ -23,6 +29,9 @@ export async function GET(request: NextRequest) {
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+  if (project.userId && project.userId !== session.user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const nodes = await getOutlineTree(projectId);

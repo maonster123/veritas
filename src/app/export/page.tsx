@@ -1,4 +1,5 @@
 import React from "react";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getOutlineTree } from "@/app/actions/outline";
 import { buildTree } from "@/lib/outline-utils";
@@ -11,6 +12,11 @@ export default async function ExportPage({
 }: {
   searchParams: Promise<{ projectId?: string }>;
 }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return <div className="p-8 text-red-500">请先登录</div>;
+  }
+
   const { projectId } = await searchParams;
   if (!projectId) {
     return <div className="p-8 text-red-500">Missing projectId parameter</div>;
@@ -19,6 +25,9 @@ export default async function ExportPage({
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) {
     return <div className="p-8 text-red-500">Project not found</div>;
+  }
+  if (project.userId && project.userId !== session.user.id) {
+    return <div className="p-8 text-red-500">无权访问该项目</div>;
   }
 
   const nodes = await getOutlineTree(projectId);
