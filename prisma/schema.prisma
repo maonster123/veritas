@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ──────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────
+
+enum ProjectStatus {
+  draft
+  writing
+  reviewing
+  completed
+}
+
+enum OutlineNodeType {
+  chapter
+  section
+  subsection
+  paragraph
+}
+
+enum CitationFormatType {
+  numeric
+  author_year
+  author_page
+}
+
+// ──────────────────────────────────────────────
+// 1. Project
+// ──────────────────────────────────────────────
+
+model Project {
+  id          String        @id @default(uuid())
+  title       String
+  subtitle    String?
+  description String?
+  status      ProjectStatus @default(draft)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  outlineNodes   OutlineNode[]
+  references     Reference[]
+  formatRule     FormatRule?
+  citationStyles ProjectCitationStyle[]
+}
+
+// ──────────────────────────────────────────────
+// 2. OutlineNode
+// ──────────────────────────────────────────────
+
+model OutlineNode {
+  id        String          @id @default(uuid())
+  projectId String
+  parentId  String?
+  sortOrder Int             @default(0)
+  title     String
+  type      OutlineNodeType @default(chapter)
+  content   String?
+  notes     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  project  Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent   OutlineNode?   @relation("NodeTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children OutlineNode[]  @relation("NodeTree")
+
+  outlineReferences OutlineReference[]
+
+  @@index([projectId])
+  @@index([parentId])
+}
+
+// ──────────────────────────────────────────────
+// 3. Reference
+// ──────────────────────────────────────────────
+
+model Reference {
+  id        String   @id @default(uuid())
+  projectId String
+  doi       String?
+  title     String
+  authors   String   @default("[]")
+  journal   String?
+  volume    String?
+  issue     String?
+  pages     String?
+  year      Int?
+  publisher String?
+  url       String?
+  abstract  String?
+  rawBibtex String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project           Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  outlineReferences OutlineReference[]
+
+  @@unique([projectId, doi])
+  @@index([projectId])
+}
+
+// ──────────────────────────────────────────────
+// 4. OutlineReference
+// ──────────────────────────────────────────────
+
+model OutlineReference {
+  id            String  @id @default(uuid())
+  outlineNodeId String
+  referenceId   String
+  citationText  String?
+
+  outlineNode OutlineNode @relation(fields: [outlineNodeId], references: [id], onDelete: Cascade)
+  reference   Reference   @relation(fields: [referenceId], references: [id], onDelete: Cascade)
+
+  @@unique([outlineNodeId, referenceId])
+}
+
+// ──────────────────────────────────────────────
+// 5. FormatRule
+// ──────────────────────────────────────────────
+
+model FormatRule {
+  id            String @id @default(uuid())
+  projectId     String @unique
+  pageMargins   String @default("{}")
+  lineSpacing   Float  @default(1.5)
+  headingStyles String @default("{}")
+  bodyFont      String @default("{}")
+  headerFooter  String @default("{}")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ──────────────────────────────────────────────
+// 6. CitationStyle
+// ──────────────────────────────────────────────
+
+model CitationStyle {
+  id         String             @id @default(uuid())
+  name       String             @unique
+  formatType CitationFormatType
+  template   String             @default("{}")
+
+  projects ProjectCitationStyle[]
+}
+
+// ──────────────────────────────────────────────
+// 7. ProjectCitationStyle
+// ──────────────────────────────────────────────
+
+model ProjectCitationStyle {
+  id              String  @id @default(uuid())
+  projectId       String
+  citationStyleId String
+  isActive        Boolean @default(false)
+
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  citationStyle CitationStyle  @relation(fields: [citationStyleId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, citationStyleId])
+  @@index([projectId])
+}
