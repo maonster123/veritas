@@ -26,6 +26,10 @@ export default function OutlineApp({ projectId, title, subtitle, lang, hasApiKey
     loadTree();
   }, [loadTree]);
 
+  useEffect(() => {
+    setCurrentLang(lang);
+  }, [lang]);
+
   const selectedNode = state.selectedId
     ? flattenTree(state.tree).find((n) => n.id === state.selectedId) ?? null
     : null;
