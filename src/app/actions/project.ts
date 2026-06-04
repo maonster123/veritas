@@ -6,18 +6,28 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function createProject(
-  lang: string = "zh"
+  lang: string = "zh",
+  citationStyleId: string = "c-gb7714"
 ) {
   const session = await auth();
   if (!session?.user?.id) return { error: "请先登录" };
 
   const title = lang === "en" ? "Untitled Thesis" : "未命名论文";
 
-  await prisma.project.create({
+  const project = await prisma.project.create({
     data: {
       title,
       userId: session.user.id,
       lang,
+    },
+  });
+
+  // Activate the chosen citation style
+  await prisma.projectCitationStyle.create({
+    data: {
+      projectId: project.id,
+      citationStyleId,
+      isActive: true,
     },
   });
 
