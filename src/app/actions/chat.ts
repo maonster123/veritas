@@ -3,19 +3,33 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-const SYSTEM_PROMPT = `你是一名资深学术写作导师，你的任务是帮助用户在已有论文框架和内容的基础上进行写作，而不是替用户"写论文"。你的每一条建议都必须基于用户提供的大纲和正文内容。
+const SYSTEM_PROMPT_ZH = `你是一名资深学术写作导师，你的任务是帮助用户在已有论文框架和内容的基础上进行写作，而不是替用户"写论文"。你的每一条建议都必须基于用户提供的大纲和正文内容。
 
 行为准则：
 1. 严禁使用"然而""此外""总而言之""首先...其次...最后"等模板化连接词堆砌
 2. 句式多样化：长短句交替，避免连续3句以上相同句式结构
 3. 回答直接进入主题，不要铺垫、不要总结、不要"希望这些建议对你有帮助"
 4. 中文表述自然口语化但不失学术性，避免翻译腔
-5. 引用具体文献时给出完整引用信息，不做无出处的断言
+5. 引用具体文献时给出完整引用信息（支持 GB/T 7714 格式），不做无出处的断言
 6. 如果用户问你"帮我写这段"，你应该提供草稿并标注哪些部分需要用户自己补充
 7. 避免过度使用排比句、"不仅...而且"、"在...的背景下"等高频学术套话
 8. 不要用"首先其次最后"——用逻辑递进而非列表式
 
 你的输出将用于论文写作，请确保所有内容均为原创、可追溯、不含抄袭。`;
+
+const SYSTEM_PROMPT_EN = `You are a senior academic writing advisor. Your role is to help users write based on their existing thesis structure and content — not to write the thesis for them. Every suggestion must be grounded in the user's provided outline and draft.
+
+Guidelines:
+1. Avoid formulaic transitions: do not stack "furthermore", "moreover", "in addition", "in conclusion" in every paragraph
+2. Vary sentence structure: alternate between short and long sentences; avoid 3+ sentences with the same structure in a row
+3. Get straight to the point — no preamble, no "I hope these suggestions help", no filler
+4. Use natural academic English, not stilted or overly formal "thesaurus" prose
+5. When citing specific literature, provide complete citation info (APA/MLA/IEEE as appropriate). Do not make unsourced claims.
+6. If the user asks "write this section for me", provide a draft and clearly mark which parts need the user's own input
+7. Avoid overusing semicolons, passive-voice chains, and "it should be noted that" / "it is worth mentioning that"
+8. Use logical flow, not numbered lists disguised as prose
+
+Your output will be used in a thesis. Ensure all content is original, traceable, and free of plagiarism.`;
 
 async function verifyNodeOwnership(nodeId: string): Promise<boolean> {
   const session = await auth();
@@ -46,11 +60,11 @@ export async function sendMessage(
       return { success: false, error: "MISSING_KEY" };
     }
 
-    // Load node context
+    // Load node context (including project lang for system prompt)
     const node = await prisma.outlineNode.findUnique({
       where: { id: nodeId },
       include: {
-        project: { select: { title: true, subtitle: true } },
+        project: { select: { title: true, subtitle: true, lang: true } },
         parent: { select: { title: true } },
       },
     });
@@ -69,20 +83,31 @@ export async function sendMessage(
     });
 
     // Build messages array for DeepSeek
+    const isEnglish = node.project.lang === "en";
+    const systemPrompt = isEnglish ? SYSTEM_PROMPT_EN : SYSTEM_PROMPT_ZH;
     const thesisTitle = node.project.title + (node.project.subtitle ? ` — ${node.project.subtitle}` : "");
     const chapterTitle = node.parent?.title ?? "";
-    const typeLabel =
-      node.type === "chapter" ? "章" : node.type === "section" ? "节" : node.type === "subsection" ? "小节" : "段落";
+    const typeLabel = isEnglish
+      ? node.type === "chapter" ? "Chapter" : node.type === "section" ? "Section" : node.type === "subsection" ? "Subsection" : "Paragraph"
+      : node.type === "chapter" ? "章" : node.type === "section" ? "节" : node.type === "subsection" ? "小节" : "段落";
 
-    const systemMessage = `${SYSTEM_PROMPT}
+    const contextBlock = isEnglish
+      ? `Current thesis info:
+- Thesis title: ${thesisTitle}
+- Chapter: ${chapterTitle}
+- Current node: "${node.title}" (Type: ${typeLabel})
+- Existing content: ${node.content ? node.content.slice(0, 2000) : "(none)"}
 
-当前论文信息：
+Please assist the user with academic writing based on the above context.`
+      : `当前论文信息：
 - 论文题目：${thesisTitle}
 - 所在章节：${chapterTitle}
 - 当前节点：「${node.title}」（类型：${typeLabel}）
 - 节点已有正文：${node.content ? node.content.slice(0, 2000) : "（暂无）"}
 
 请基于以上上下文帮助用户进行学术写作。`;
+
+    const systemMessage = `${systemPrompt}\n\n${contextBlock}`;
 
     const messages = [
       { role: "system", content: systemMessage },

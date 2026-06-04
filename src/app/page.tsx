@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import OutlineApp from "@/components/OutlineApp";
+import CreateProjectForm from "@/components/CreateProjectForm";
 import Link from "next/link";
 
 export default async function Home() {
@@ -25,19 +26,15 @@ export default async function Home() {
     );
   }
 
-  // Find the user's first project, or create one
-  let project = await prisma.project.findFirst({
+  // Find the user's first project
+  const project = await prisma.project.findFirst({
     where: { userId: session.user.id },
     orderBy: { updatedAt: "desc" },
   });
 
+  // No project yet — show lang selector
   if (!project) {
-    project = await prisma.project.create({
-      data: {
-        title: "未命名论文",
-        userId: session.user.id,
-      },
-    });
+    return <CreateProjectForm />;
   }
 
   // Check if user has DeepSeek API key
@@ -47,5 +44,5 @@ export default async function Home() {
   });
   const hasApiKey = !!user?.deepseekApiKey;
 
-  return <OutlineApp projectId={project.id} title={project.title} subtitle={project.subtitle} hasApiKey={hasApiKey} />;
+  return <OutlineApp projectId={project.id} title={project.title} subtitle={project.subtitle} lang={project.lang} hasApiKey={hasApiKey} />;
 }

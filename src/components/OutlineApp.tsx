@@ -8,15 +8,17 @@ import ChatPanel from "@/components/chat/ChatPanel";
 import ProjectTitleBar from "@/components/outline/ProjectTitleBar";
 import { flattenTree } from "@/lib/outline-utils";
 import { signOut } from "next-auth/react";
+import { updateProjectLang } from "@/app/actions/project";
 
 interface OutlineAppProps {
   projectId: string;
   title: string;
   subtitle: string | null;
+  lang: string;
   hasApiKey: boolean;
 }
 
-export default function OutlineApp({ projectId, title, subtitle, hasApiKey }: OutlineAppProps) {
+export default function OutlineApp({ projectId, title, subtitle, lang, hasApiKey }: OutlineAppProps) {
   const { state, dispatch, loadTree, select, handleAdd, handleUpdate, handleDelete, handleMove } =
     useOutlineTree(projectId);
 
@@ -29,6 +31,7 @@ export default function OutlineApp({ projectId, title, subtitle, hasApiKey }: Ou
     : null;
 
   const [showExport, setShowExport] = useState(false);
+  const [currentLang, setCurrentLang] = useState(lang);
 
   const onDragStart = useCallback((e: React.DragEvent, id: string) => {
     e.dataTransfer.setData("text/plain", id);
@@ -59,6 +62,21 @@ export default function OutlineApp({ projectId, title, subtitle, hasApiKey }: Ou
         <div className="sticky top-0 z-10 px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between">
           <span className="text-xs font-medium text-zinc-500">大纲</span>
           <div className="flex items-center gap-2">
+            <button
+              onClick={async () => {
+                const nextLang = currentLang === "zh" ? "en" : "zh";
+                setCurrentLang(nextLang);
+                await updateProjectLang(projectId, nextLang);
+              }}
+              className={`text-xs px-2 py-1 rounded transition-colors ${
+                currentLang === "zh"
+                  ? "bg-red-50 text-red-600 hover:bg-red-100"
+                  : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+              }`}
+              title={currentLang === "zh" ? "中文论文模式" : "English thesis mode"}
+            >
+              {currentLang === "zh" ? "中" : "EN"}
+            </button>
             <div className="relative">
               <button
                 onClick={() => setShowExport(!showExport)}

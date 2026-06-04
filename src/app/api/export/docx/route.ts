@@ -59,7 +59,13 @@ export async function GET(request: NextRequest) {
       };
 
   const activeStyle = await prisma.projectCitationStyle.findFirst({
-    where: { projectId, isActive: true },
+    where: {
+      projectId,
+      isActive: true,
+      citationStyle: {
+        name: project.lang === "zh" ? { in: ["GB/T 7714"] } : { notIn: ["GB/T 7714"] },
+      },
+    },
     include: { citationStyle: true },
   });
   const citationConfig: CitationConfig = activeStyle?.citationStyle
