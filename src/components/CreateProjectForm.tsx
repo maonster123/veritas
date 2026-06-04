@@ -1,18 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createProject } from "@/app/actions/project";
 
 export default function CreateProjectForm() {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleCreate = async (lang: string) => {
     setLoading(true);
     const result = await createProject(lang);
     if (result.success) {
-      router.refresh();
+      window.location.reload();
     } else {
       setLoading(false);
     }
