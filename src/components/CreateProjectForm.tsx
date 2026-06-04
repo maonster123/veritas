@@ -1,15 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createProject } from "@/app/actions/project";
 
 export default function CreateProjectForm() {
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleCreate = async (lang: string) => {
     setLoading(true);
-    await createProject(lang);
-    // Page will revalidate and redirect to OutlineApp
+    const result = await createProject(lang);
+    if (result.success) {
+      router.refresh();
+    } else {
+      setLoading(false);
+    }
   };
 
   return (
