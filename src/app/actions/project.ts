@@ -3,29 +3,26 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function createProject(
   lang: string = "zh"
-): Promise<{ success: boolean; projectId?: string; error?: string }> {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "请先登录" };
+) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "请先登录" };
 
-    const title = lang === "en" ? "Untitled Thesis" : "未命名论文";
+  const title = lang === "en" ? "Untitled Thesis" : "未命名论文";
 
-    const project = await prisma.project.create({
-      data: {
-        title,
-        userId: session.user.id,
-        lang,
-      },
-    });
+  await prisma.project.create({
+    data: {
+      title,
+      userId: session.user.id,
+      lang,
+    },
+  });
 
-    revalidatePath("/");
-    return { success: true, projectId: project.id };
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : "创建失败" };
-  }
+  revalidatePath("/", "layout");
+  redirect("/");
 }
 
 export async function updateProjectLang(

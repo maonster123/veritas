@@ -5,13 +5,14 @@ import { createProject } from "@/app/actions/project";
 
 export default function CreateProjectForm() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleCreate = async (lang: string) => {
     setLoading(true);
+    setError("");
     const result = await createProject(lang);
-    if (result.success) {
-      window.location.reload();
-    } else {
+    if (result?.error) {
+      setError(result.error);
       setLoading(false);
     }
   };
@@ -55,6 +56,9 @@ export default function CreateProjectForm() {
         </div>
         {loading && (
           <p className="text-sm text-zinc-400">创建中...</p>
+        )}
+        {error && (
+          <p className="text-sm text-red-500">{error}</p>
         )}
       </div>
     </div>
