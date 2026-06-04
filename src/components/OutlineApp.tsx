@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState } from "react";
 import { useOutlineTree } from "@/hooks/useOutlineTree";
 import OutlineTree from "@/components/outline/OutlineTree";
 import ContentEditor from "@/components/outline/ContentEditor";
+import ChatPanel from "@/components/chat/ChatPanel";
 import ProjectTitleBar from "@/components/outline/ProjectTitleBar";
 import { flattenTree } from "@/lib/outline-utils";
 import { signOut } from "next-auth/react";
@@ -108,9 +109,14 @@ export default function OutlineApp({ projectId, title, subtitle, hasApiKey }: Ou
         )}
       </div>
 
-      {/* Right: Content editor */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Middle: Content editor */}
+      <div className="flex-1 overflow-y-auto min-w-0">
         <ContentEditor node={selectedNode} onUpdate={handleUpdate} hasApiKey={hasApiKey} />
+      </div>
+
+      {/* Right: Chat panel */}
+      <div className="w-[400px] shrink-0 overflow-hidden">
+        <ChatPanel node={selectedNode} />
       </div>
     </div>
   );
