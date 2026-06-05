@@ -36,9 +36,9 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
   };
 
   return (
-    <div className="flex h-full min-h-0">
+    <div className="h-full grid grid-cols-[360px_1fr] min-h-0">
       {/* ── Left: Auxiliary panel (tabs) ── */}
-      <div className="w-[360px] shrink-0 border-r border-zinc-200 dark:border-zinc-800 flex flex-col min-h-0">
+      <div className="border-r border-zinc-200 dark:border-zinc-800 flex flex-col min-h-0">
         {/* Node header */}
         <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
           <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">
@@ -64,7 +64,7 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
         </div>
 
         {/* Aux content — scrollable independently */}
-        <div className="flex-1 p-4 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0 p-4">
           {activeAux === "notes" ? (
             <NotesPanel notes={notes} setNotes={setNotes} saveNotes={() => onUpdate(node.id, { notes })} />
           ) : activeAux === "ai" ? (
@@ -78,7 +78,7 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
       </div>
 
       {/* ── Right: Content (always visible) ── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex flex-col min-h-0 min-w-0">
         <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 shrink-0 flex items-center justify-between">
           <span className="text-xs font-medium text-zinc-500">正文</span>
           <span className="text-[10px] text-zinc-400">支持 Markdown</span>
