@@ -276,7 +276,6 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
   const [apiKey, setApiKey] = useState("");
   const [needsKey, setNeedsKey] = useState(!hasApiKey);
   const [input, setInput] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
   const nodeRef = useRef<string>("");
 
   useEffect(() => {
@@ -286,10 +285,6 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
       getChatHistory(node.id).then(r => { if (r.success && nodeRef.current === node.id) setMessages(r.messages ?? []); });
     }
   }, [node.id, hasApiKey]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -345,7 +340,6 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
             </div>
           </div>
         )}
-        <div ref={bottomRef} />
       </div>
       {error && <div className="mb-2 text-xs text-red-500 bg-red-50 dark:bg-red-950 rounded px-3 py-2 flex items-center justify-between"><span>{error}</span><button onClick={() => setError("")} className="text-red-400">&times;</button></div>}
       <div className="flex gap-2 shrink-0">
