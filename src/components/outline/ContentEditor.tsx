@@ -63,8 +63,8 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
           <AuxTabButton active={activeAux === "chat"} onClick={() => setActiveAux("chat")}>AI助手</AuxTabButton>
         </div>
 
-        {/* Aux content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        {/* Aux content — each tab handles its own scrolling */}
+        <div className="flex-1 p-4 overflow-hidden">
           {activeAux === "notes" ? (
             <NotesPanel notes={notes} setNotes={setNotes} saveNotes={() => onUpdate(node.id, { notes })} />
           ) : activeAux === "ai" ? (
@@ -114,13 +114,15 @@ function AuxTabButton({ active, onClick, children }: { active: boolean; onClick:
 
 function NotesPanel({ notes, setNotes, saveNotes }: { notes: string; setNotes: (v: string) => void; saveNotes: () => void }) {
   return (
-    <textarea
-      value={notes}
-      onChange={(e) => setNotes(e.target.value)}
-      onBlur={saveNotes}
-      placeholder="个人备注（不会输出到最终文档）..."
-      className="w-full h-full min-h-[200px] bg-transparent text-sm text-zinc-500 dark:text-zinc-400 resize-none focus:outline-none placeholder:text-zinc-400 italic"
-    />
+    <div className="h-full">
+      <textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        onBlur={saveNotes}
+        placeholder="个人备注（不会输出到最终文档）..."
+        className="w-full h-full bg-transparent text-sm text-zinc-500 dark:text-zinc-400 resize-none focus:outline-none placeholder:text-zinc-400 italic"
+      />
+    </div>
   );
 }
 
