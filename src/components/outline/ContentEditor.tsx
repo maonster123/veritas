@@ -238,9 +238,21 @@ function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean 
                   <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{r.description}</p>
                   <p className="text-[10px] text-zinc-400 mt-1 truncate">{r.url}</p>
                   {r.citation && (
-                    <p className="text-[10px] text-zinc-400 mt-1.5 pt-1.5 border-t border-zinc-100 dark:border-zinc-800 italic leading-relaxed">
-                      {r.citation}
-                    </p>
+                    <div className="mt-1.5 pt-1.5 border-t border-zinc-100 dark:border-zinc-800 flex items-start gap-1 group/cite">
+                      <p className="flex-1 text-[10px] text-zinc-400 italic leading-relaxed select-all">
+                        {r.citation}
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigator.clipboard.writeText(r.citation);
+                        }}
+                        className="shrink-0 text-[10px] px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 rounded hover:bg-blue-100 hover:text-blue-600 opacity-0 group-hover/cite:opacity-100 transition-opacity"
+                        title="复制引用"
+                      >
+                        复制
+                      </button>
+                    </div>
                   )}
                 </div>
                 {r.needsVpn && <span className="shrink-0 text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 rounded">⚠ 需VPN</span>}
