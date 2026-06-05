@@ -39,7 +39,8 @@ export async function generateAIContent(nodeId: string): Promise<{ success: bool
       select: { id: true, title: true, authors: true, year: true, journal: true, doi: true },
     });
 
-    const refList = references.length > 0
+    const hasReferences = references.length > 0;
+    const refList = hasReferences
       ? references.map((r, i) => {
           const authors = JSON.parse(r.authors || "[]") as { family: string; given: string }[];
           const authorStr = authors.length > 0
@@ -47,14 +48,26 @@ export async function generateAIContent(nodeId: string): Promise<{ success: bool
             : "Unknown";
           return `[${i + 1}] ${authorStr} (${r.year || "n.d."}). ${r.title}. ${r.journal || ""}. DOI: ${r.doi || "N/A"}`;
         }).join("\n")
-      : "（尚无文献，请先通过 DOI 导入文献）";
+      : "";
+
+    const citationRule = hasReferences
+      ? `CITE ONLY FROM THE PROVIDED REFERENCE LIST: Only cite references from the list below, using their number (e.g., "[1]", "[2,3]"). Never fabricate a reference.`
+      : "No reference list is provided. You may still write rigorous conceptual/analytical content. For any factual claims requiring evidence, mark them \"[citation needed]\". Do not fabricate references.";
+
+    const zhCitationRule = hasReferences
+      ? `只能引用下方文献列表中的真实文献，引用时使用编号如 [1]、[2,3]。不要编造任何参考文献。`
+      : `当前没有可用文献。你仍然可以撰写严谨的概念分析和论证内容。对需要证据的事实性陈述标注"[citation needed]"。不要编造参考文献。`;
+
+    const refSection = hasReferences
+      ? `\n\nAVAILABLE REFERENCES (cite by number only):\n${refList}`
+      : "";
 
     const systemPrompt = isEnglish
       ? `You are a senior academic writing advisor for a peer-reviewed journal. Thesis: "${thesisTitle}".
 
 RULES (violations will be rejected):
 1. SCIENTIFIC ACCURACY: Every factual claim must be precise and verifiable. Use exact terminology — never approximate, never simplify. "Mean age was 45.2 years (SD = 12.7)" NOT "average age was around 45". Report exact values, effect sizes, confidence intervals where applicable.
-2. CITE ONLY FROM THE PROVIDED REFERENCE LIST: Only cite references from the list provided below. Reference them by their number (e.g., "[1]", "[2,3]"). If no reference in the list supports a claim, do not make that claim — or mark it "[citation needed]". NEVER fabricate a reference.
+2. ${citationRule}
 3. LANGUAGE QUALITY: Native-level academic English. No garbled sentences, no mixed grammar, no invented words. Every sentence must parse correctly. Proofread before output.
 4. TERMINOLOGY: Use established disciplinary terms correctly. Never invent abbreviations. Define acronyms on first use: "Confirmatory Factor Analysis (CFA)".
 5. NO MARKERS: Do not use "first", "second", "third", "finally", "in conclusion" as transition words. Use logical flow.
@@ -62,17 +75,11 @@ RULES (violations will be rejected):
 7. Be concise: no filler, no hedging chain ("it could perhaps be suggested that"), no throat-clearing.
 
 After each paragraph, provide an ACCURATE Chinese translation marked "【中文】" on its own line. CRITICAL for translations: fully translate ALL technical terms — "average" → "平均", "mean" → "均值", "standard deviation" → "标准差", never abbreviate to single letters or English shorthand.`
-      : `你是学术论文写作助手。论文题目：「${thesisTitle}」。请严格遵守：只能引用下方文献列表中的真实文献，引用时使用编号如 [1]、[2,3]。不要编造任何参考文献。`;
+      : `你是学术论文写作助手。论文题目：「${thesisTitle}」。要求专业严谨。${zhCitationRule}`;
 
     const userPrompt = isEnglish
-      ? `Write approximately 200-400 words of rigorous academic content for "${node.title}" (section: ${chapter}, type: ${typeLabelEn}). Requirements: use precise terminology, cite ONLY from the reference list below, maintain formal academic register. After each paragraph, provide an accurate full Chinese translation on the next line starting with "【中文】".
-
-AVAILABLE REFERENCES (cite by number only):
-${refList}`
-      : `请为「${node.title}」（所属：${chapter}，类型：${typeLabelZh}）撰写约200-400字的学术内容，要求专业严谨。只能引用下方文献列表中的真实文献，引用时使用编号如 [1]、[2,3]。
-
-可用文献：
-${refList}`;
+      ? `Write approximately 200-400 words of rigorous academic content for "${node.title}" (section: ${chapter}, type: ${typeLabelEn}). After each paragraph, provide an accurate full Chinese translation on the next line starting with "【中文】".${refSection}`
+      : `请为「${node.title}」（所属：${chapter}，类型：${typeLabelZh}）撰写约200-400字的学术内容，要求专业严谨。${refSection}`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
