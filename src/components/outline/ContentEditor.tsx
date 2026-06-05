@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { FlatNode } from "@/lib/outline-utils";
-import { generateAIContent, saveDeepseekKey } from "@/app/actions/ai-generate";
+import { generateAIContent, recommendResources, saveDeepseekKey } from "@/app/actions/ai-generate";
 
 interface Props {
   node: FlatNode | null;
@@ -13,7 +13,7 @@ interface Props {
 export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
   const [content, setContent] = useState("");
   const [notes, setNotes] = useState("");
-  const [tab, setTab] = useState<"content" | "notes" | "ai">("content");
+  const [tab, setTab] = useState<"content" | "notes" | "ai" | "resources">("content");
 
   // Sync local state when selected node changes
   useEffect(() => {
@@ -65,6 +65,9 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
         <TabButton active={tab === "ai"} onClick={() => setTab("ai")}>
           AI 推荐
         </TabButton>
+        <TabButton active={tab === "resources"} onClick={() => setTab("resources")}>
+          文献推荐
+        </TabButton>
       </div>
 
       {/* Editor area */}
@@ -85,8 +88,10 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
             placeholder="个人备注（不会输出到最终文档）..."
             className="w-full h-full min-h-[300px] bg-transparent text-sm text-zinc-500 dark:text-zinc-400 resize-none focus:outline-none placeholder:text-zinc-400 italic"
           />
-        ) : (
+        ) : tab === "ai" ? (
           <AITab node={node} hasApiKey={hasApiKey} />
+        ) : (
+          <ResourcesTab node={node} hasApiKey={hasApiKey} />
         )}
       </div>
     </div>
@@ -107,6 +112,8 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
     </button>
   );
 }
+
+// ── AI Content Generation Tab ──
 
 function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
   const [aiContent, setAiContent] = useState(node.aiContent ?? "");
@@ -151,7 +158,6 @@ function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
     if (result.success) {
       setNeedsKey(false);
       setApiKey("");
-      // Auto-generate after saving key
       const genResult = await generateAIContent(node.id);
       if (genResult.success && genResult.content) {
         setAiContent(genResult.content);
@@ -173,7 +179,6 @@ function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
     }
   };
 
-  // Show key input if we know they need one
   if (needsKey === true) {
     return (
       <div className="space-y-3">
@@ -243,6 +248,172 @@ function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
       ) : (
         <div className="flex items-center justify-center flex-1 text-zinc-400 text-sm">
           点击"生成推荐内容"获取 AI 写作建议
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Resource Recommendation Tab ──
+
+interface ResourceItem {
+  name: string;
+  url: string;
+  description: string;
+  needsVpn: boolean;
+}
+
+function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
+  const [resources, setResources] = useState<ResourceItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [needsKey, setNeedsKey] = useState(!hasApiKey);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Reset when node changes
+  useEffect(() => {
+    setResources([]);
+    setError("");
+    setHasLoaded(false);
+  }, [node.id]);
+
+  const handleRecommend = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const result = await recommendResources(node.id);
+      if (result.success && result.resources) {
+        setResources(result.resources);
+        setNeedsKey(false);
+        setHasLoaded(true);
+      } else {
+        if (result.error === "MISSING_KEY") {
+          setNeedsKey(true);
+        } else {
+          setError(result.error ?? "推荐失败");
+        }
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "推荐失败");
+    }
+    setLoading(false);
+  };
+
+  const handleSaveKey = async () => {
+    if (!apiKey.trim()) return;
+    setLoading(true);
+    setError("");
+    const result = await saveDeepseekKey(apiKey.trim());
+    if (result.success) {
+      setNeedsKey(false);
+      setApiKey("");
+      const recResult = await recommendResources(node.id);
+      if (recResult.success && recResult.resources) {
+        setResources(recResult.resources);
+        setHasLoaded(true);
+      } else {
+        setError(recResult.error ?? "推荐失败");
+      }
+    } else {
+      setError(result.error ?? "保存失败");
+    }
+    setLoading(false);
+  };
+
+  if (needsKey === true) {
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          请设置 DeepSeek API Key（<a href="https://platform.deepseek.com/api_keys" target="_blank" className="text-blue-600 underline">在此获取</a>）
+        </p>
+        <input
+          autoFocus
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleSaveKey(); }}
+          placeholder="sk-..."
+          className="w-full text-sm bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={handleSaveKey}
+            disabled={loading}
+            className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "保存中..." : "保存并推荐"}
+          </button>
+        </div>
+        {error && <p className="text-red-500 text-xs">{error}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-3">
+        <button
+          onClick={handleRecommend}
+          disabled={loading}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+        >
+          {loading ? (
+            <>
+              <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              搜索中...
+            </>
+          ) : (
+            "推荐文献资源"
+          )}
+        </button>
+        <span className="text-[10px] text-zinc-400">AI 推荐，网址来自训练数据，请自行验证</span>
+      </div>
+
+      {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
+
+      {hasLoaded && resources.length === 0 && !error && (
+        <div className="flex items-center justify-center flex-1 text-zinc-400 text-sm">
+          未找到相关资源
+        </div>
+      )}
+
+      {resources.length > 0 && (
+        <div className="flex-1 overflow-y-auto space-y-3">
+          {resources.map((r, i) => (
+            <a
+              key={i}
+              href={r.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-emerald-400 dark:hover:border-emerald-600 transition-colors group"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 truncate">
+                    {r.name}
+                  </h4>
+                  <p className="text-xs text-zinc-500 mt-1 line-clamp-2">
+                    {r.description}
+                  </p>
+                  <p className="text-[10px] text-zinc-400 mt-1 truncate">
+                    {r.url}
+                  </p>
+                </div>
+                {r.needsVpn && (
+                  <span className="shrink-0 text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 rounded whitespace-nowrap">
+                    ⚠ 需VPN
+                  </span>
+                )}
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+
+      {!hasLoaded && !error && (
+        <div className="flex items-center justify-center flex-1 text-zinc-400 text-sm">
+          点击"推荐文献资源"根据章节内容获取相关学术网站推荐
         </div>
       )}
     </div>
