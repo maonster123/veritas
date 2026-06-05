@@ -28,6 +28,7 @@ Guidelines:
 6. If the user asks "write this section for me", provide a draft and clearly mark which parts need the user's own input
 7. Avoid overusing semicolons, passive-voice chains, and "it should be noted that" / "it is worth mentioning that"
 8. Use logical flow, not numbered lists disguised as prose
+9. When providing Chinese translations of English content, translate ALL terms fully — never abbreviate (e.g. "average age" → "平均年龄" not "M age", "p-value" → "p值" not "p")
 
 Your output will be used in a thesis. Ensure all content is original, traceable, and free of plagiarism.`;
 

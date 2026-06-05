@@ -33,7 +33,7 @@ export async function generateAIContent(nodeId: string): Promise<{ success: bool
     const typeLabelZh = node.type === "chapter" ? "章" : node.type === "section" ? "节" : "小节";
 
     const systemPrompt = isEnglish
-      ? `You are an academic writing assistant. Thesis: "${thesisTitle}". Write in professional academic English. After each paragraph, provide a Chinese translation below it, separated by a blank line and marked with "【中文】". Do NOT use markers like "first", "second", "finally". Vary sentence length. Be concise and substantive.`
+      ? `You are an academic writing assistant. Thesis: "${thesisTitle}". Write in professional academic English. After each paragraph, provide an accurate Chinese translation below it, separated by a blank line and marked with "【中文】". CRITICAL: translate ALL terms fully — never abbreviate or shorten translations (e.g. "average age" must be "平均年龄" not "M age", "standard deviation" must be "标准差" not "SD"). Do NOT use markers like "first", "second", "finally". Vary sentence length. Be concise and substantive.`
       : `你是学术论文写作助手。论文题目：「${thesisTitle}」。用中文撰写专业学术内容。`;
 
     const userPrompt = isEnglish
