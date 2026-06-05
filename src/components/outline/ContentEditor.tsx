@@ -63,8 +63,8 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
           <AuxTabButton active={activeAux === "chat"} onClick={() => setActiveAux("chat")}>AI助手</AuxTabButton>
         </div>
 
-        {/* Aux content — each tab handles its own scrolling */}
-        <div className="flex-1 p-4 overflow-hidden">
+        {/* Aux content — scrollable independently */}
+        <div className="flex-1 p-4 overflow-y-auto">
           {activeAux === "notes" ? (
             <NotesPanel notes={notes} setNotes={setNotes} saveNotes={() => onUpdate(node.id, { notes })} />
           ) : activeAux === "ai" ? (
@@ -310,7 +310,7 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div ref={listRef} className="flex-1 overflow-y-auto space-y-3 mb-3">
+      <div ref={listRef} className="flex-1 space-y-3 mb-3">
         {messages.length === 0 && !isLoading && <div className="text-center text-zinc-400 text-sm mt-4">向 AI 提问开始协作</div>}
         {messages.map(msg => (
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
