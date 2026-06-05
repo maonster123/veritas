@@ -17,11 +17,30 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
   const [content, setContent] = useState("");
   const [notes, setNotes] = useState("");
   const [activeAux, setActiveAux] = useState<AuxTab>("notes");
+  const auxRef = useRef<HTMLDivElement>(null);
+  const [scrollHeight, setScrollHeight] = useState(0);
 
   useEffect(() => {
     setContent(node?.content ?? "");
     setNotes(node?.notes ?? "");
   }, [node?.id]);
+
+  // Calculate available height for the scrollable aux content
+  useEffect(() => {
+    const el = auxRef.current;
+    if (!el) return;
+    const update = () => {
+      const header = el.querySelector("[data-aux-header]") as HTMLElement | null;
+      const tabs = el.querySelector("[data-aux-tabs]") as HTMLElement | null;
+      const headerH = header?.offsetHeight ?? 0;
+      const tabsH = tabs?.offsetHeight ?? 0;
+      setScrollHeight(el.offsetHeight - headerH - tabsH);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   if (!node) {
     return (
@@ -38,9 +57,9 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
   return (
     <div className="h-full grid grid-cols-[360px_1fr] min-h-0">
       {/* ── Left: Auxiliary panel (tabs) ── */}
-      <div className="border-r border-zinc-200 dark:border-zinc-800 flex flex-col min-h-0">
+      <div ref={auxRef} className="border-r border-zinc-200 dark:border-zinc-800 flex flex-col min-h-0">
         {/* Node header */}
-        <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
+        <div data-aux-header className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
           <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">
             {node.title}
           </h2>
@@ -56,7 +75,7 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
         </div>
 
         {/* Aux tabs */}
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800 shrink-0">
+        <div data-aux-tabs className="flex border-b border-zinc-200 dark:border-zinc-800 shrink-0">
           <AuxTabButton active={activeAux === "notes"} onClick={() => setActiveAux("notes")}>备注</AuxTabButton>
           <AuxTabButton active={activeAux === "ai"} onClick={() => setActiveAux("ai")}>AI推荐</AuxTabButton>
           <AuxTabButton active={activeAux === "resources"} onClick={() => setActiveAux("resources")}>文献推荐</AuxTabButton>
@@ -64,7 +83,7 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
         </div>
 
         {/* Aux content — scrollable independently */}
-        <div className="flex-1 overflow-y-auto min-h-0 p-4">
+        <div className="overflow-y-auto p-4" style={{ height: scrollHeight || "auto" }}>
           {activeAux === "notes" ? (
             <NotesPanel notes={notes} setNotes={setNotes} saveNotes={() => onUpdate(node.id, { notes })} />
           ) : activeAux === "ai" ? (
