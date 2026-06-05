@@ -36,9 +36,9 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full min-h-0">
       {/* ── Left: Auxiliary panel (tabs) ── */}
-      <div className="w-[360px] shrink-0 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
+      <div className="w-[360px] shrink-0 border-r border-zinc-200 dark:border-zinc-800 flex flex-col min-h-0">
         {/* Node header */}
         <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
           <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">

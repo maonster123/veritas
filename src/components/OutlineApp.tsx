@@ -131,7 +131,7 @@ export default function OutlineApp({ projectId, title, subtitle, lang, hasApiKey
       </div>
 
       {/* Right: Content editor + aux panel */}
-      <div className="flex-1 overflow-hidden min-w-0">
+      <div className="flex-1 overflow-hidden min-w-0 min-h-0">
         <ContentEditor node={selectedNode} onUpdate={handleUpdate} hasApiKey={hasApiKey} />
       </div>
     </div>
