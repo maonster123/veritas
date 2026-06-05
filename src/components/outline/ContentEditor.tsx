@@ -114,15 +114,13 @@ function AuxTabButton({ active, onClick, children }: { active: boolean; onClick:
 
 function NotesPanel({ notes, setNotes, saveNotes }: { notes: string; setNotes: (v: string) => void; saveNotes: () => void }) {
   return (
-    <div className="h-full">
-      <textarea
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        onBlur={saveNotes}
-        placeholder="个人备注（不会输出到最终文档）..."
-        className="w-full h-full bg-transparent text-sm text-zinc-500 dark:text-zinc-400 resize-none focus:outline-none placeholder:text-zinc-400 italic"
-      />
-    </div>
+    <textarea
+      value={notes}
+      onChange={(e) => setNotes(e.target.value)}
+      onBlur={saveNotes}
+      placeholder="个人备注（不会输出到最终文档）..."
+      className="w-full min-h-[300px] bg-transparent text-sm text-zinc-500 dark:text-zinc-400 resize-none focus:outline-none placeholder:text-zinc-400 italic"
+    />
   );
 }
 
@@ -165,7 +163,7 @@ function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
   if (needsKey === true) return <KeyInputForm apiKey={apiKey} setApiKey={setApiKey} onSave={handleSaveKey} loading={loading} error={error} />;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col min-h-[300px]">
       <div className="flex items-center justify-between mb-3">
         <button onClick={handleGenerate} disabled={loading} className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50">
           {loading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />生成中...</> : "生成推荐内容"}
@@ -174,7 +172,7 @@ function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
       </div>
       {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
       {aiContent ? (
-        <div className="relative flex-1">
+        <div className="relative">
           <div ref={contentRef} onMouseUp={() => { const s = window.getSelection(); if (s?.toString()) { navigator.clipboard.writeText(s.toString()); setCopied(true); setTimeout(() => setCopied(false), 1500); } }} className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed select-text">{aiContent}</div>
           {copied && <div className="absolute top-0 right-0 text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">已复制</div>}
         </div>
@@ -222,7 +220,7 @@ function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean 
   if (needsKey === true) return <KeyInputForm apiKey={apiKey} setApiKey={setApiKey} onSave={handleSaveKey} loading={loading} error={error} />;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col min-h-[300px]">
       <div className="flex items-center justify-between mb-3">
         <button onClick={handleRecommend} disabled={loading} className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50">
           {loading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />搜索中...</> : "推荐文献资源"}
@@ -261,7 +259,7 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
   const [apiKey, setApiKey] = useState("");
   const [needsKey, setNeedsKey] = useState(!hasApiKey);
   const [input, setInput] = useState("");
-  const listRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const nodeRef = useRef<string>("");
 
   useEffect(() => {
@@ -273,7 +271,7 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
   }, [node.id, hasApiKey]);
 
   useEffect(() => {
-    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSend = async () => {
@@ -309,8 +307,8 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
   }} />;
 
   return (
-    <div className="flex flex-col h-full">
-      <div ref={listRef} className="flex-1 space-y-3 mb-3">
+    <div className="flex flex-col min-h-[350px]">
+      <div className="space-y-3 mb-3" style={{ minHeight: "200px" }}>
         {messages.length === 0 && !isLoading && <div className="text-center text-zinc-400 text-sm mt-4">向 AI 提问开始协作</div>}
         {messages.map(msg => (
           <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -330,6 +328,7 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
             </div>
           </div>
         )}
+        <div ref={bottomRef} />
       </div>
       {error && <div className="mb-2 text-xs text-red-500 bg-red-50 dark:bg-red-950 rounded px-3 py-2 flex items-center justify-between"><span>{error}</span><button onClick={() => setError("")} className="text-red-400">&times;</button></div>}
       <div className="flex gap-2 shrink-0">
