@@ -51,7 +51,7 @@ export default function ChatPanel({ node }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full border-l border-zinc-200 dark:border-zinc-800">
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
         <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">

@@ -131,14 +131,14 @@ export default function OutlineApp({ projectId, title, subtitle, lang, hasApiKey
         )}
       </div>
 
-      {/* Middle: Content editor */}
-      <div className="flex-1 overflow-y-auto min-w-0">
-        <ContentEditor node={selectedNode} onUpdate={handleUpdate} hasApiKey={hasApiKey} />
+      {/* Middle: Chat panel */}
+      <div className="w-[320px] shrink-0 overflow-hidden border-r border-zinc-200 dark:border-zinc-800">
+        <ChatPanel node={selectedNode} />
       </div>
 
-      {/* Right: Chat panel */}
-      <div className="w-[400px] shrink-0 overflow-hidden">
-        <ChatPanel node={selectedNode} />
+      {/* Right: Content editor (largest area) */}
+      <div className="flex-1 overflow-y-auto min-w-0">
+        <ContentEditor node={selectedNode} onUpdate={handleUpdate} hasApiKey={hasApiKey} />
       </div>
     </div>
   );
