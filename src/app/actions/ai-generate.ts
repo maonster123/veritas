@@ -116,6 +116,7 @@ interface ResourceItem {
   url: string;
   description: string;
   needsVpn: boolean;
+  citation: string;
 }
 
 export async function recommendResources(
@@ -136,7 +137,15 @@ export async function recommendResources(
     const node = await prisma.outlineNode.findUnique({
       where: { id: nodeId },
       include: {
-        project: { select: { userId: true, title: true, subtitle: true, lang: true } },
+        project: {
+          select: {
+            userId: true, title: true, subtitle: true, lang: true,
+            citationStyles: {
+              where: { isActive: true },
+              include: { citationStyle: { select: { name: true } } },
+            },
+          },
+        },
         parent: { select: { title: true } },
       },
     });
@@ -147,31 +156,41 @@ export async function recommendResources(
     const thesisTitle = node.project.title + (node.project.subtitle ? ` — ${node.project.subtitle}` : "");
     const chapter = node.parent?.title ?? "";
 
+    // Determine citation format
+    const activeStyle = node.project.citationStyles[0]?.citationStyle;
+    const citationFormat = activeStyle?.name ?? (isEnglish ? "APA 7th" : "GB/T 7714");
+
+    const citationRule = isEnglish
+      ? `IMPORTANT: For each resource, also generate a properly formatted citation in ${citationFormat} format. Include the citation as a "citation" field. For websites: use "Author/Organization. (Year). Title. Site Name. URL" or the ${citationFormat}-specific equivalent. If year is unknown, use "n.d.".`
+      : `重要：为每个资源生成符合 ${citationFormat} 格式的规范引用，放在 "citation" 字段中。`;
+
     const systemPrompt = isEnglish
-      ? `You are an academic research assistant. Your task: recommend 3-5 real websites/resources relevant to the user's research topic.
+      ? `You are an academic research assistant. Recommend 3-5 real academic websites/resources relevant to the user's research topic.
 
 RULES:
-1. Only recommend well-known, real academic websites (Google Scholar, PubMed, arXiv, CNKI, Web of Science, Scopus, official journal sites, university repositories, government data portals, etc.).
-2. NEVER fabricate URLs. If you are unsure about a specific URL, do not include it.
-3. For each resource, provide: name, full URL, 1-sentence description of what it offers.
-4. Mark VPN requirement: if the site is blocked in mainland China (e.g., Google Scholar, Google Books, most .gov US sites), set needsVpn to true. Sites like CNKI, Wanfang, PubMed (accessible in China), arXiv should have needsVpn set to false.
+1. Only recommend well-known, real websites (Google Scholar, PubMed, arXiv, CNKI, Web of Science, Scopus, official journal sites, university repositories, government data portals).
+2. NEVER fabricate URLs.
+3. For each resource provide: name, full URL, 1-sentence description, VPN requirement, and a formatted citation.
+4. VPN: blocked in mainland China → needsVpn: true. CNKI/Wanfang/PubMed/arXiv → needsVpn: false.
+5. ${citationRule}
 
-Return ONLY a JSON array. No other text. Format:
-[{"name": "...", "url": "https://...", "description": "...", "needsVpn": true/false}]`
-      : `你是学术研究助手。任务：根据用户的研究主题，推荐 3-5 个真实的网站/资源。
+Return ONLY a JSON array:
+[{"name":"...","url":"https://...","description":"...","needsVpn":true/false,"citation":"..."}]`
+      : `你是学术研究助手。推荐 3-5 个真实学术网站/资源。
 
 规则：
-1. 只推荐知名真实的学术网站（Google Scholar、PubMed、arXiv、知网、万方、Web of Science、Scopus、官方期刊网站、大学机构库、政府数据门户等）。
-2. 绝不编造网址。不确定的网址不要包含。
-3. 每个资源提供：名称、完整网址、一句话描述其价值。
-4. VPN 标注：如果该网站在中国大陆被墙（如 Google Scholar、Google Books），设置 needsVpn 为 true。知网、万方、PubMed（国内可访问）、arXiv 等设为 false。
+1. 只推荐知名真实网站（Google Scholar、PubMed、arXiv、知网、万方、Web of Science、Scopus等）。
+2. 绝不编造网址。
+3. 每个资源提供：名称、网址、一句话描述、VPN需求、规范引用。
+4. VPN：国内被墙 → needsVpn: true。知网/万方/PubMed/arXiv → needsVpn: false。
+5. ${citationRule}
 
-只返回 JSON 数组，不要其他文字。格式：
-[{"name": "...", "url": "https://...", "description": "...", "needsVpn": true/false}]`;
+只返回 JSON 数组：
+[{"name":"...","url":"https://...","description":"...","needsVpn":true/false,"citation":"..."}]`;
 
     const userPrompt = isEnglish
-      ? `Thesis: "${thesisTitle}". Current section: "${node.title}" (under ${chapter}). Node content: ${node.content ? node.content.slice(0, 1000) : "(no content yet)"}. Recommend 3-5 relevant academic websites/resources. Return only JSON array.`
-      : `论文：「${thesisTitle}」。当前章节：「${node.title}」（所属：${chapter}）。节点内容：${node.content ? node.content.slice(0, 1000) : "（暂无内容）"}。推荐 3-5 个相关学术网站/资源。只返回 JSON 数组。`;
+      ? `Thesis: "${thesisTitle}". Section: "${node.title}" (under ${chapter}). Content: ${node.content ? node.content.slice(0, 800) : "(none)"}. Recommend 3-5 academic websites with ${citationFormat} citations. Return only JSON array.`
+      : `论文：「${thesisTitle}」。章节：「${node.title}」（${chapter}）。内容：${node.content ? node.content.slice(0, 800) : "（无）"}。推荐 3-5 个学术网站，附带 ${citationFormat} 格式引用。只返回 JSON 数组。`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);

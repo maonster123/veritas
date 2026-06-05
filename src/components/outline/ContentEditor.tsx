@@ -185,7 +185,7 @@ function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
 
 // ── Resource Recommendation ──
 
-interface ResourceItem { name: string; url: string; description: string; needsVpn: boolean; }
+interface ResourceItem { name: string; url: string; description: string; needsVpn: boolean; citation: string; }
 
 function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
   const [resources, setResources] = useState<ResourceItem[]>([]);
@@ -237,6 +237,11 @@ function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean 
                   <h4 className="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-emerald-600 truncate">{r.name}</h4>
                   <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{r.description}</p>
                   <p className="text-[10px] text-zinc-400 mt-1 truncate">{r.url}</p>
+                  {r.citation && (
+                    <p className="text-[10px] text-zinc-400 mt-1.5 pt-1.5 border-t border-zinc-100 dark:border-zinc-800 italic leading-relaxed">
+                      {r.citation}
+                    </p>
+                  )}
                 </div>
                 {r.needsVpn && <span className="shrink-0 text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 rounded">⚠ 需VPN</span>}
               </div>
