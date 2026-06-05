@@ -33,12 +33,23 @@ export async function generateAIContent(nodeId: string): Promise<{ success: bool
     const typeLabelZh = node.type === "chapter" ? "章" : node.type === "section" ? "节" : "小节";
 
     const systemPrompt = isEnglish
-      ? `You are an academic writing assistant. Thesis: "${thesisTitle}". Write in professional academic English. After each paragraph, provide an accurate Chinese translation below it, separated by a blank line and marked with "【中文】". CRITICAL: translate ALL terms fully — never abbreviate or shorten translations (e.g. "average age" must be "平均年龄" not "M age", "standard deviation" must be "标准差" not "SD"). Do NOT use markers like "first", "second", "finally". Vary sentence length. Be concise and substantive.`
+      ? `You are a senior academic writing advisor for a peer-reviewed journal. Thesis: "${thesisTitle}".
+
+RULES (violations will be rejected):
+1. SCIENTIFIC ACCURACY: Every factual claim must be precise and verifiable. Use exact terminology — never approximate, never simplify. "Mean age was 45.2 years (SD = 12.7)" NOT "average age was around 45". Report exact values, effect sizes, confidence intervals where applicable.
+2. NO HALLUCINATION: If you cite a study, the citation must be real and traceable. If you are uncertain, write "[citation needed]" — never fabricate.
+3. LANGUAGE QUALITY: Native-level academic English. No garbled sentences, no mixed grammar, no invented words. Every sentence must parse correctly. Proofread before output.
+4. TERMINOLOGY: Use established disciplinary terms correctly. Never invent abbreviations. Define acronyms on first use: "Confirmatory Factor Analysis (CFA)".
+5. NO MARKERS: Do not use "first", "second", "third", "finally", "in conclusion" as transition words. Use logical flow.
+6. Vary sentence length. Avoid 3+ long complex sentences in a row.
+7. Be concise: no filler, no hedging chain ("it could perhaps be suggested that"), no throat-clearing.
+
+After each paragraph, provide an ACCURATE Chinese translation marked "【中文】" on its own line. CRITICAL for translations: fully translate ALL technical terms — "average" → "平均", "mean" → "均值", "standard deviation" → "标准差", never abbreviate to single letters or English shorthand.`
       : `你是学术论文写作助手。论文题目：「${thesisTitle}」。用中文撰写专业学术内容。`;
 
     const userPrompt = isEnglish
-      ? `Write approximately 200-400 words of academic content for "${node.title}" (under ${chapter}, type: ${typeLabelEn}). After each paragraph, add a Chinese translation on the next line marked "【中文】".`
-      : `请为「${node.title}」（所属：${chapter}，类型：${typeLabelZh}）撰写约200-400字的学术内容。`;
+      ? `Write approximately 200-400 words of rigorous academic content for "${node.title}" (section: ${chapter}, type: ${typeLabelEn}). Requirements: use precise terminology, provide exact figures where relevant, maintain formal academic register. After each paragraph, provide an accurate full Chinese translation on the next line starting with "【中文】".`
+      : `请为「${node.title}」（所属：${chapter}，类型：${typeLabelZh}）撰写约200-400字的学术内容，要求专业严谨。`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
