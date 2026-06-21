@@ -6,7 +6,7 @@ interface Author {
 
 interface CrossRefWork {
   title?: string[];
-  author?: { given?: string; family?: string }[];
+  author?: { given?: string; family?: string; name?: string }[];
   "container-title"?: string[];
   volume?: string;
   issue?: string;
@@ -40,11 +40,17 @@ function pickYear(work: CrossRefWork): number | null {
 }
 
 function parseAuthors(work: CrossRefWork): Author[] {
-  return (work.author ?? []).map((a, i) => ({
-    given: a.given ?? "",
-    family: a.family ?? "",
-    order: i,
-  }));
+  return (work.author ?? []).map((a, i) => {
+    // Organizational authors use "name" field (e.g., "American Psychological Association")
+    if (a.name && !a.given && !a.family) {
+      return { given: "", family: a.name, order: i };
+    }
+    return {
+      given: a.given ?? "",
+      family: a.family ?? "",
+      order: i,
+    };
+  });
 }
 
 async function fetchCrossRef(doi: string): Promise<ResolvedReference | null> {

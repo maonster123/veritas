@@ -280,7 +280,7 @@ export async function normalizeCitation(
         if (style && resolved) {
           const refData = {
             id: "norm",
-            title: resolved.title,
+            title: resolved.title.replace(/\.+$/, ""),
             authors: JSON.stringify(resolved.authors),
             journal: resolved.journal,
             volume: resolved.volume,
