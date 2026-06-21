@@ -167,32 +167,53 @@ export async function recommendResources(
       : `重要：为每个资源生成符合 ${citationFormat} 格式的规范引用，放在 "citation" 字段中。`;
 
     const systemPrompt = isEnglish
-      ? `You are an academic research assistant. Recommend 3-5 real academic websites/resources relevant to the user's research topic.
+      ? `You are an academic research assistant. Recommend 3-5 real academic resources relevant to the user's research topic.
 
-RULES:
-1. Only recommend well-known, real websites (Google Scholar, PubMed, arXiv, CNKI, Web of Science, Scopus, official journal sites, university repositories, government data portals).
-2. NEVER fabricate URLs.
-3. For each resource provide: name, full URL, 1-sentence description, VPN requirement, and a formatted citation.
-4. VPN: blocked in mainland China → needsVpn: true. CNKI/Wanfang/PubMed/arXiv → needsVpn: false.
-5. ${citationRule}
+CRITICAL URL RULES:
+1. ONLY generate search URLs on major platforms — NEVER guess specific article/journal/file URLs.
+2. For each resource, use the platform's search URL with the user's topic as query.
+3. Valid platforms and their URL patterns:
+   - Google Scholar: https://scholar.google.com/scholar?q=KEYWORDS
+   - PubMed: https://pubmed.ncbi.nlm.nih.gov/?term=KEYWORDS
+   - arXiv: https://arxiv.org/search/?query=KEYWORDS&searchtype=all
+   - CNKI: https://kns.cnki.net/kns8s/search?classid=VDNJYZVH&kw=KEYWORDS
+   - Wanfang: https://s.wanfangdata.com.cn/paper?q=KEYWORDS
+   - Web of Science: https://www.webofscience.com/wos/woscc/basic-search (then user searches manually)
+   - Scopus: https://www.scopus.com/search/form.uri?display=basic (then user searches manually)
+   - Google Books: https://books.google.com/books?q=KEYWORDS
+   - ScienceDirect: https://www.sciencedirect.com/search?qs=KEYWORDS
+   - JSTOR: https://www.jstor.org/action/doBasicSearch?Query=KEYWORDS
+   - APA PsycINFO: https://www.apa.org/pubs/databases/psycinfo (resource homepage)
+4. NEVER invent any URL not on this list. If unsure, use Google Scholar.
+5. For each resource provide: name, URL, 1-sentence description on why it's relevant, VPN requirement, and citation.
+6. VPN: Google Scholar/Google Books → true. CNKI/Wanfang/PubMed/arXiv → false.
 
-Return ONLY a JSON array:
+Return ONLY JSON array:
 [{"name":"...","url":"https://...","description":"...","needsVpn":true/false,"citation":"..."}]`
-      : `你是学术研究助手。推荐 3-5 个真实学术网站/资源。
+      : `你是学术研究助手。推荐 3-5 个真实学术资源。
 
-规则：
-1. 只推荐知名真实网站（Google Scholar、PubMed、arXiv、知网、万方、Web of Science、Scopus等）。
-2. 绝不编造网址。
-3. 每个资源提供：名称、网址、一句话描述、VPN需求、规范引用。
-4. VPN：国内被墙 → needsVpn: true。知网/万方/PubMed/arXiv → needsVpn: false。
-5. ${citationRule}
+网址规则（极其重要）：
+1. 只能使用大平台的搜索链接，绝不猜测具体论文/期刊/文件链接。
+2. 每个资源用平台搜索URL + 用户关键词。
+3. 可用平台及URL格式：
+   - 知网：https://kns.cnki.net/kns8s/search?classid=VDNJYZVH&kw=关键词
+   - 万方：https://s.wanfangdata.com.cn/paper?q=关键词
+   - 百度学术：https://xueshu.baidu.com/s?wd=关键词
+   - Google Scholar：https://scholar.google.com/scholar?q=关键词
+   - PubMed：https://pubmed.ncbi.nlm.nih.gov/?term=关键词
+   - arXiv：https://arxiv.org/search/?query=关键词
+   - 维普：http://www.cqvip.com/QK/Search.aspx?key=关键词
+   - ScienceDirect：https://www.sciencedirect.com/search?qs=关键词
+4. 绝不编造不在列表中的网址。不确定就用百度学术或Google Scholar。
+5. 每个资源提供：名称、URL、一句话描述、VPN需求、规范引用。
+6. VPN：Google Scholar/Google Books → true。知网/万方/维普/百度学术/PubMed/arXiv → false。
 
-只返回 JSON 数组：
+只返回JSON数组：
 [{"name":"...","url":"https://...","description":"...","needsVpn":true/false,"citation":"..."}]`;
 
     const userPrompt = isEnglish
-      ? `Thesis: "${thesisTitle}". Section: "${node.title}" (under ${chapter}). Content: ${node.content ? node.content.slice(0, 800) : "(none)"}. Recommend 3-5 academic websites with ${citationFormat} citations. Return only JSON array.`
-      : `论文：「${thesisTitle}」。章节：「${node.title}」（${chapter}）。内容：${node.content ? node.content.slice(0, 800) : "（无）"}。推荐 3-5 个学术网站，附带 ${citationFormat} 格式引用。只返回 JSON 数组。`;
+      ? `Thesis: "${thesisTitle}". Section: "${node.title}" (under ${chapter}). Content: ${node.content ? node.content.slice(0, 800) : "(none)"}. Recommend 3-5 academic resources using major platform search URLs with relevant keywords. Return only JSON array.`
+      : `论文：「${thesisTitle}」。章节：「${node.title}」（${chapter}）。内容：${node.content ? node.content.slice(0, 800) : "（无）"}。推荐3-5个学术资源，用大平台搜索链接+相关关键词。只返回JSON数组。`;
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
@@ -243,7 +264,24 @@ Return ONLY a JSON array:
       return { success: false, error: "未找到相关资源推荐" };
     }
 
-    return { success: true, resources };
+    // Validate URLs — filter out dead links
+    const valid: ResourceItem[] = [];
+    for (const r of resources) {
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 5000);
+        const head = await fetch(r.url, { method: "HEAD", signal: ctrl.signal }).finally(() => clearTimeout(t));
+        if (head.ok) valid.push(r);
+      } catch {
+        // Dead URL — skip it
+      }
+    }
+
+    if (valid.length === 0) {
+      return { success: false, error: "AI 推荐的网址均无法访问，请重试" };
+    }
+
+    return { success: true, resources: valid };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       return { success: false, error: "请求超时" };
