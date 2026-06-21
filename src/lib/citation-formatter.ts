@@ -38,7 +38,7 @@ function formatAuthorsGB(authors: AuthorEntry[]): string {
   if (authors.length === 0) return "";
   return authors
     .sort((a, b) => a.order - b.order)
-    .map((a) => `${a.family} ${a.given}`)
+    .map((a) => a.given.trim() ? `${a.family} ${a.given}` : a.family)
     .join(", ");
 }
 
@@ -46,6 +46,8 @@ function formatAuthorsAPA(authors: AuthorEntry[]): string {
   if (authors.length === 0) return "";
   const sorted = [...authors].sort((a, b) => a.order - b.order);
   const names = sorted.map((a) => {
+    // Organizational author (no given name)
+    if (!a.given.trim()) return a.family;
     const initials = a.given
       .split(/\s+/)
       .map((w) => (w[0] ?? "").toUpperCase() + ".")
@@ -60,10 +62,15 @@ function formatAuthorsAPA(authors: AuthorEntry[]): string {
 function formatAuthorsMLA(authors: AuthorEntry[]): string {
   if (authors.length === 0) return "";
   const sorted = [...authors].sort((a, b) => a.order - b.order);
-  if (sorted.length === 1) return `${sorted[0].family}, ${sorted[0].given}`;
-  if (sorted.length === 2)
-    return `${sorted[0].family}, ${sorted[0].given}, and ${sorted[1].given} ${sorted[1].family}`;
-  return `${sorted[0].family}, ${sorted[0].given}, et al.`;
+  // Organizational author (no given name)
+  if (sorted.length === 1) return sorted[0].given.trim() ? `${sorted[0].family}, ${sorted[0].given}` : sorted[0].family;
+  if (sorted.length === 2) {
+    const a0 = sorted[0].given.trim() ? `${sorted[0].family}, ${sorted[0].given}` : sorted[0].family;
+    const a1 = sorted[1].given.trim() ? `${sorted[1].given} ${sorted[1].family}` : sorted[1].family;
+    return `${a0}, and ${a1}`;
+  }
+  const first = sorted[0].given.trim() ? `${sorted[0].family}, ${sorted[0].given}` : sorted[0].family;
+  return `${first}, et al.`;
 }
 
 function formatAuthorsIEEE(authors: AuthorEntry[]): string {
@@ -71,6 +78,8 @@ function formatAuthorsIEEE(authors: AuthorEntry[]): string {
   const sorted = [...authors].sort((a, b) => a.order - b.order);
   return sorted
     .map((a) => {
+      // Organizational author (no given name)
+      if (!a.given.trim()) return a.family;
       const initials = a.given
         .split(/\s+/)
         .map((w) => (w[0] ?? "").toUpperCase() + ".")
