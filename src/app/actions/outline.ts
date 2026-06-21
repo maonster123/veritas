@@ -92,3 +92,28 @@ export async function moveNode(nodeId: string, newParentId: string | null, newSo
   });
   revalidatePath("/");
 }
+
+export async function unlinkReference(outlineReferenceId: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const or = await prisma.outlineReference.findUnique({
+    where: { id: outlineReferenceId },
+    include: { outlineNode: { select: { project: { select: { userId: true } } } } },
+  });
+  if (!or || or.outlineNode.project.userId !== session.user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  await prisma.outlineReference.delete({ where: { id: outlineReferenceId } });
+  revalidatePath("/");
+}
+
+export async function linkReference(nodeId: string, referenceId: string) {
+  if (!(await verifyNodeOwnership(nodeId))) throw new Error("Unauthorized");
+
+  await prisma.outlineReference.create({
+    data: { outlineNodeId: nodeId, referenceId },
+  });
+  revalidatePath("/");
+}

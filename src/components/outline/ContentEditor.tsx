@@ -4,17 +4,19 @@ import { useState, useEffect, useRef } from "react";
 import type { FlatNode } from "@/lib/outline-utils";
 import { generateAIContent, recommendResources, normalizeCitation, saveDeepseekKey } from "@/app/actions/ai-generate";
 import { sendMessage, getChatHistory } from "@/app/actions/chat";
+import { unlinkReference, linkReference } from "@/app/actions/outline";
 
 interface Props {
   node: FlatNode | null;
   onUpdate: (id: string, data: { content?: string; notes?: string }) => void;
+  onReload: () => void;
   hasApiKey: boolean;
   lang: string;
 }
 
 type AuxTab = "notes" | "ai" | "resources" | "chat" | "norm";
 
-export default function ContentEditor({ node, onUpdate, hasApiKey, lang }: Props) {
+export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lang }: Props) {
   const [content, setContent] = useState("");
   const [notes, setNotes] = useState("");
   const [activeAux, setActiveAux] = useState<AuxTab>("notes");
@@ -94,6 +96,7 @@ export default function ContentEditor({ node, onUpdate, hasApiKey, lang }: Props
           placeholder="在此撰写正文..."
           className="flex-1 w-full bg-transparent text-sm text-zinc-800 dark:text-zinc-200 resize-none focus:outline-none placeholder:text-zinc-400 p-4"
         />
+        <RefSection node={node} onReload={onReload} />
       </div>
     </div>
   );
@@ -272,6 +275,70 @@ function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean 
 }
 
 // ── Chat Tab ──
+
+// ── Chapter References Section ──
+
+function parseRefAuthors(authorsJson: string): string {
+  try {
+    const arr = JSON.parse(authorsJson) as { family: string; given: string }[];
+    if (arr.length === 0) return "";
+    if (arr.length === 1) return arr[0].family;
+    if (arr.length === 2) return `${arr[0].family} & ${arr[1].family}`;
+    return `${arr[0].family} et al.`;
+  } catch { return ""; }
+}
+
+function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }) {
+  const refs = node.outlineReferences ?? [];
+  const [collapsed, setCollapsed] = useState(true);
+
+  if (refs.length === 0) return null;
+
+  return (
+    <div className="border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="w-full px-4 py-2 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+      >
+        <span className="text-xs font-medium text-zinc-500">
+          本章引用 ({refs.length})
+        </span>
+        <span className="text-xs text-zinc-400">{collapsed ? "▸" : "▾"}</span>
+      </button>
+      {!collapsed && (
+        <div className="px-4 pb-3 space-y-1.5 max-h-[200px] overflow-y-auto">
+          {refs.map((or, i) => {
+            const r = or.reference;
+            const authors = parseRefAuthors(r.authors);
+            const year = r.year ?? "n.d.";
+            return (
+              <div key={or.id} className="flex items-start gap-2 group py-1">
+                <span className="text-[10px] text-zinc-400 mt-0.5 shrink-0">[{i + 1}]</span>
+                <p className="flex-1 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed min-w-0">
+                  {authors ? `${authors} ` : ""}({year}). {r.title}
+                  {r.journal ? `. ${r.journal}` : ""}
+                  {r.volume ? `, ${r.volume}` : ""}
+                  {r.issue ? `(${r.issue})` : ""}
+                  {r.pages ? `, ${r.pages}` : ""}.
+                </p>
+                <button
+                  onClick={async () => {
+                    await unlinkReference(or.id);
+                    onReload();
+                  }}
+                  className="shrink-0 text-[10px] text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                  title="移除引用"
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Citation Normalizer Tab ──
 

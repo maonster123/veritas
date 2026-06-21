@@ -12,7 +12,16 @@ export interface FlatNode {
   outlineReferences?: {
     id: string;
     citationText: string | null;
-    reference: { id: string; title: string; year: number | null };
+    reference: {
+      id: string;
+      title: string;
+      authors: string;
+      year: number | null;
+      journal: string | null;
+      volume: string | null;
+      issue: string | null;
+      pages: string | null;
+    };
   }[];
 }
 
