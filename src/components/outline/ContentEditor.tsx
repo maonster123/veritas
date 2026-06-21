@@ -2,18 +2,19 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { FlatNode } from "@/lib/outline-utils";
-import { generateAIContent, recommendResources, saveDeepseekKey } from "@/app/actions/ai-generate";
+import { generateAIContent, recommendResources, normalizeCitation, saveDeepseekKey } from "@/app/actions/ai-generate";
 import { sendMessage, getChatHistory } from "@/app/actions/chat";
 
 interface Props {
   node: FlatNode | null;
   onUpdate: (id: string, data: { content?: string; notes?: string }) => void;
   hasApiKey: boolean;
+  lang: string;
 }
 
-type AuxTab = "notes" | "ai" | "resources" | "chat";
+type AuxTab = "notes" | "ai" | "resources" | "chat" | "norm";
 
-export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
+export default function ContentEditor({ node, onUpdate, hasApiKey, lang }: Props) {
   const [content, setContent] = useState("");
   const [notes, setNotes] = useState("");
   const [activeAux, setActiveAux] = useState<AuxTab>("notes");
@@ -61,6 +62,7 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
           <AuxTabButton active={activeAux === "ai"} onClick={() => setActiveAux("ai")}>AI推荐</AuxTabButton>
           <AuxTabButton active={activeAux === "resources"} onClick={() => setActiveAux("resources")}>文献推荐</AuxTabButton>
           <AuxTabButton active={activeAux === "chat"} onClick={() => setActiveAux("chat")}>AI助手</AuxTabButton>
+          <AuxTabButton active={activeAux === "norm"} onClick={() => setActiveAux("norm")}>引用规范</AuxTabButton>
         </div>
 
         {/* Aux content */}
@@ -71,6 +73,8 @@ export default function ContentEditor({ node, onUpdate, hasApiKey }: Props) {
             <AITab node={node} hasApiKey={hasApiKey} />
           ) : activeAux === "resources" ? (
             <ResourcesTab node={node} hasApiKey={hasApiKey} />
+          ) : activeAux === "norm" ? (
+            <NormTab node={node} hasApiKey={hasApiKey} lang={lang} />
           ) : (
             <ChatTab node={node} hasApiKey={hasApiKey} />
           )}
@@ -263,6 +267,97 @@ function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean 
       )}
       {!hasLoaded && !error && <div className="flex items-center justify-center flex-1 text-zinc-400 text-sm">点击按钮获取相关学术网站</div>}
       {hasLoaded && resources.length === 0 && !error && <div className="flex items-center justify-center flex-1 text-zinc-400 text-sm">未找到相关资源</div>}
+    </div>
+  );
+}
+
+// ── Chat Tab ──
+
+// ── Citation Normalizer Tab ──
+
+function NormTab({ node, hasApiKey, lang }: { node: FlatNode; hasApiKey: boolean; lang: string }) {
+  const [rawText, setRawText] = useState("");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const formatName = lang === "en"
+    ? { "c-gb7714": "GB/T 7714", "c-apa7": "APA 7th", "c-mla9": "MLA 9th", "c-ieee": "IEEE" }
+    : { "c-gb7714": "GB/T 7714", "c-apa7": "APA 7th", "c-mla9": "MLA 9th", "c-ieee": "IEEE" };
+
+  // Key simplified for user display
+  const formatLabels: Record<string, string> = {
+    "GB/T 7714": "GB/T 7714", "APA 7th": "APA 7th", "MLA 9th": "MLA 9th", "IEEE": "IEEE",
+    GB: "GB/T 7714", APA: "APA 7th", MLA: "MLA 9th",
+  };
+
+  const [targetFormat, setTargetFormat] = useState(lang === "zh" ? "GB/T 7714" : "APA 7th");
+
+  const handleNormalize = async () => {
+    if (!rawText.trim()) return;
+    setLoading(true); setError(""); setResult("");
+    const r = await normalizeCitation(rawText.trim(), targetFormat, lang);
+    if (r.success && r.citation) setResult(r.citation);
+    else if (r.error === "MISSING_KEY") setError("请先设置 API Key");
+    else setError(r.error ?? "格式化失败");
+    setLoading(false);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <div className="flex flex-col h-full space-y-3">
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-xs text-zinc-500">目标格式：</span>
+        <select
+          value={targetFormat}
+          onChange={e => setTargetFormat(e.target.value)}
+          className="text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1"
+        >
+          {(lang === "zh"
+            ? ["GB/T 7714", "APA 7th"]
+            : ["APA 7th", "MLA 9th", "IEEE"]
+          ).map(f => (
+            <option key={f} value={f}>{f}</option>
+          ))}
+        </select>
+      </div>
+
+      <textarea
+        value={rawText}
+        onChange={e => setRawText(e.target.value)}
+        placeholder="粘贴任意格式的参考文献，如 PMID 格式、PubMed 格式、或其他不规范格式..."
+        className="w-full h-32 bg-transparent border border-zinc-300 dark:border-zinc-600 rounded text-xs text-zinc-800 dark:text-zinc-200 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-zinc-400 p-3"
+      />
+
+      <button
+        onClick={handleNormalize}
+        disabled={loading || !rawText.trim()}
+        className="shrink-0 flex items-center justify-center gap-1.5 text-xs px-3 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 transition-colors"
+      >
+        {loading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />解析中...</> : "转为规范格式"}
+      </button>
+
+      {error && <p className="text-red-500 text-xs shrink-0">{error}</p>}
+
+      {result && (
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex items-center justify-between mb-1 shrink-0">
+            <span className="text-[10px] text-zinc-400">{targetFormat} 格式</span>
+            <button onClick={handleCopy} className="text-[10px] px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded hover:bg-blue-100 hover:text-blue-600">
+              {copied ? "已复制" : "复制"}
+            </button>
+          </div>
+          <div className="flex-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded p-3 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed overflow-y-auto select-all">
+            {result}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

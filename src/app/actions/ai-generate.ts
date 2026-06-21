@@ -250,6 +250,71 @@ Return ONLY a JSON array:
   }
 }
 
+// ── Citation Normalizer ──
+
+export async function normalizeCitation(
+  rawText: string,
+  targetFormat: string,
+  lang: string
+): Promise<{ success: boolean; citation?: string; error?: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: "请先登录" };
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { deepseekApiKey: true },
+    });
+    if (!currentUser?.deepseekApiKey) {
+      return { success: false, error: "MISSING_KEY" };
+    }
+
+    const isEn = lang === "en";
+
+    const systemPrompt = isEn
+      ? `You are a citation formatting expert. Format the given reference into proper ${targetFormat} style. Extract all metadata (authors, title, journal, year, volume, issue, pages, DOI, publisher) from the raw text. Return ONLY the formatted citation as plain text — no explanations, no markdown.`
+      : `你是参考文献格式化专家。将给定文献转换为标准的 ${targetFormat} 格式。从原始文本中提取所有元数据（作者、标题、期刊、年份、卷、期、页码、DOI、出版社）。只返回格式化后的引用文本，不要解释。`;
+
+    const userPrompt = isEn
+      ? `Format this reference in ${targetFormat} style:\n\n${rawText}`
+      : `请将此文献按 ${targetFormat} 格式规范输出：\n\n${rawText}`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentUser.deepseekApiKey}`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.1,
+        max_tokens: 1024,
+      }),
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
+
+    if (!res.ok) return { success: false, error: `API 错误 ${res.status}` };
+
+    const data = await res.json();
+    const citation = data.choices?.[0]?.message?.content;
+    if (!citation) return { success: false, error: "AI 返回为空" };
+
+    return { success: true, citation: citation.trim() };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      return { success: false, error: "请求超时" };
+    }
+    return { success: false, error: error instanceof Error ? error.message : "未知错误" };
+  }
+}
+
 export async function saveDeepseekKey(apiKey: string): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await auth();
