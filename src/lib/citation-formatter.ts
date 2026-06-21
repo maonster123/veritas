@@ -46,8 +46,8 @@ function formatAuthorsAPA(authors: AuthorEntry[]): string {
   if (authors.length === 0) return "";
   const sorted = [...authors].sort((a, b) => a.order - b.order);
   const names = sorted.map((a) => {
-    // Organizational author (no given name)
-    if (!a.given.trim()) return a.family;
+    // Organizational author (no given name) — needs trailing period in APA
+    if (!a.given.trim()) return a.family + ".";
     const initials = a.given
       .split(/\s+/)
       .map((w) => (w[0] ?? "").toUpperCase() + ".")
