@@ -89,6 +89,37 @@ function formatAuthorsIEEE(authors: AuthorEntry[]): string {
     .join(", ");
 }
 
+// ── MLA Title Case ──
+
+const MLA_LOWERCASE = new Set([
+  "a", "an", "the",
+  "and", "but", "or", "nor", "for", "so", "yet",
+  "at", "by", "in", "of", "on", "to", "up", "as",
+  "is", "it", "be", "am", "are", "was", "were", "been",
+  "from", "with", "into", "onto", "upon", "within", "without",
+]);
+
+function toTitleCase(title: string): string {
+  const words = title.split(/\s+/);
+  if (words.length === 0) return title;
+
+  const last = words.length - 1;
+  return words
+    .map((w, i) => {
+      // Always capitalize first and last word
+      if (i === 0 || i === last) {
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      }
+      // Keep lowercase for minor words
+      if (MLA_LOWERCASE.has(w.toLowerCase())) {
+        return w.toLowerCase();
+      }
+      // Capitalize all other words
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    })
+    .join(" ");
+}
+
 // ── Template filling ──
 
 function fillTemplate(template: string, vars: Record<string, string>): string {
@@ -123,9 +154,13 @@ export function formatReferenceEntry(
       }
   }
 
+  // MLA: use title case and append DOI
+  const isMLA = style.formatType === "author_page";
+  const displayTitle = isMLA ? toTitleCase(ref.title) : ref.title;
+
   const vars: Record<string, string> = {
     authors: authorsStr,
-    title: ref.title,
+    title: displayTitle,
     journal: ref.journal ?? "",
     volume: ref.volume ?? "",
     issue: ref.issue ?? "",
@@ -138,7 +173,14 @@ export function formatReferenceEntry(
     url: ref.url ?? "",
   };
 
-  return fillTemplate(tmpl, vars);
+  let result = fillTemplate(tmpl, vars);
+
+  // MLA 9th: append DOI if available
+  if (isMLA && ref.doi) {
+    result += ` doi:${ref.doi}.`;
+  }
+
+  return result;
 }
 
 // ── In-text citation formatting ──
