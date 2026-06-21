@@ -2,6 +2,8 @@
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { resolveDOI } from "@/lib/doi-resolver";
+import { formatReferenceEntry } from "@/lib/citation-formatter";
 
 // ── AI Content Generation (no citations, logic-focused) ──
 
@@ -261,6 +263,50 @@ export async function normalizeCitation(
     const session = await auth();
     if (!session?.user?.id) return { success: false, error: "请先登录" };
 
+    // ── Step 1: Try DOI lookup ──
+    const doiMatch = rawText.match(/10\.\d{4,}\/[^\s"')\]]+/);
+    const doi = doiMatch ? doiMatch[0].replace(/[.,;]+$/, "") : null;
+
+    if (doi) {
+      // Resolve DOI to get accurate metadata via CrossRef
+      try {
+        const resolved = await resolveDOI(doi);
+
+        // Get citation style template from DB
+        const style = await prisma.citationStyle.findFirst({
+          where: { name: targetFormat },
+        });
+
+        if (style && resolved) {
+          const refData = {
+            id: "norm",
+            title: resolved.title,
+            authors: JSON.stringify(resolved.authors),
+            journal: resolved.journal,
+            volume: resolved.volume,
+            issue: resolved.issue,
+            pages: resolved.pages,
+            year: resolved.year,
+            publisher: resolved.publisher,
+            url: resolved.url ?? doi,
+            doi,
+          };
+
+          const styleData = {
+            name: style.name,
+            formatType: style.formatType,
+            template: JSON.parse(style.template) as Record<string, string>,
+          };
+
+          const citation = formatReferenceEntry(refData, styleData, 1);
+          return { success: true, citation };
+        }
+      } catch {
+        // DOI resolve failed — fall through to AI
+      }
+    }
+
+    // ── Step 2: Fallback to AI ──
     const currentUser = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { deepseekApiKey: true },
@@ -271,9 +317,13 @@ export async function normalizeCitation(
 
     const isEn = lang === "en";
 
+    const sourceNote = doi
+      ? "DOI was found in the text but CrossRef lookup failed. Please format based on available information from the text."
+      : "No DOI found. Extract metadata from the text directly.";
+
     const systemPrompt = isEn
-      ? `You are a citation formatting expert. Format the given reference into proper ${targetFormat} style. Extract all metadata (authors, title, journal, year, volume, issue, pages, DOI, publisher) from the raw text. Return ONLY the formatted citation as plain text — no explanations, no markdown.`
-      : `你是参考文献格式化专家。将给定文献转换为标准的 ${targetFormat} 格式。从原始文本中提取所有元数据（作者、标题、期刊、年份、卷、期、页码、DOI、出版社）。只返回格式化后的引用文本，不要解释。`;
+      ? `You are a citation formatting expert. Format the given reference into proper ${targetFormat} style. ${sourceNote} Return ONLY the formatted citation — no explanations.`
+      : `你是参考文献格式化专家。将给定文献转换为标准 ${targetFormat} 格式。${sourceNote} 只返回格式化后的引用文本。`;
 
     const userPrompt = isEn
       ? `Format this reference in ${targetFormat} style:\n\n${rawText}`
