@@ -300,10 +300,11 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
     if (!doiInput.trim()) return;
     setAdding(true);
     try {
-      const result = await lookupAndSaveDOI(doiInput.trim(), node.projectId);
+      const result = await lookupAndSaveDOI(node.projectId, doiInput.trim());
       if (result.success && result.reference) {
         await linkReference(node.id, result.reference.id);
         setDoiInput("");
+        setShowAdder(false);
         onReload();
       }
     } catch { /* ignore */ }
