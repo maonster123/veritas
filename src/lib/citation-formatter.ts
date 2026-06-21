@@ -154,9 +154,10 @@ export function formatReferenceEntry(
       }
   }
 
-  // MLA: use title case and append DOI
+  // MLA & IEEE: use title case
   const isMLA = style.formatType === "author_page";
-  const displayTitle = isMLA ? toTitleCase(ref.title) : ref.title;
+  const isIEEE = style.name === "IEEE";
+  const displayTitle = (isMLA || isIEEE) ? toTitleCase(ref.title) : ref.title;
 
   const vars: Record<string, string> = {
     authors: authorsStr,
@@ -175,8 +176,8 @@ export function formatReferenceEntry(
 
   let result = fillTemplate(tmpl, vars);
 
-  // MLA 9th: append DOI if available
-  if (isMLA && ref.doi) {
+  // Append DOI for MLA 9th and IEEE
+  if ((isMLA || isIEEE) && ref.doi) {
     result += ` doi:${ref.doi}.`;
   }
 
