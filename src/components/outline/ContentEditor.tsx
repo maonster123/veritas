@@ -295,19 +295,32 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
   const [showAdder, setShowAdder] = useState(false);
   const [doiInput, setDoiInput] = useState("");
   const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState("");
 
   const handleAddDoi = async () => {
-    if (!doiInput.trim()) return;
+    const raw = doiInput.trim();
+    if (!raw) return;
     setAdding(true);
+    setAddError("");
+
+    // Extract DOI from pasted text (plain DOI or full citation with DOI)
+    const doiMatch = raw.match(/10\.\d{4,}\/[^\s"')\]]+/i);
+    const doi = doiMatch ? doiMatch[0].replace(/[.,;]+$/, "") : raw;
+
     try {
-      const result = await lookupAndSaveDOI(node.projectId, doiInput.trim());
+      const result = await lookupAndSaveDOI(node.projectId, doi);
       if (result.success && result.reference) {
         await linkReference(node.id, result.reference.id);
         setDoiInput("");
         setShowAdder(false);
+        setAddError("");
         onReload();
+      } else {
+        setAddError(result.error ?? "添加失败，请检查 DOI 是否正确");
       }
-    } catch { /* ignore */ }
+    } catch {
+      setAddError("网络错误，请重试");
+    }
     setAdding(false);
   };
 
@@ -366,13 +379,13 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
             </button>
           ) : (
             <div className="space-y-2">
-              <p className="text-[10px] text-zinc-400">粘贴 DOI 添加文献到本章：</p>
+              <p className="text-[10px] text-zinc-400">粘贴 DOI 或含 DOI 的引用文本（自动提取）：</p>
               <div className="flex gap-2">
                 <input
                   value={doiInput}
-                  onChange={e => setDoiInput(e.target.value)}
+                  onChange={e => { setDoiInput(e.target.value); setAddError(""); }}
                   onKeyDown={e => { if (e.key === "Enter") handleAddDoi(); }}
-                  placeholder="10.xxxx/xxxxx"
+                  placeholder="10.xxxx/xxxxx 或直接粘贴 PMID/PubMed 格式"
                   disabled={adding}
                   className="flex-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
@@ -384,7 +397,8 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
                   {adding ? "查找中..." : "添加"}
                 </button>
               </div>
-              <button onClick={() => setShowAdder(false)} className="text-[10px] text-zinc-400 hover:text-zinc-600">取消</button>
+              {addError && <p className="text-red-500 text-[10px]">{addError}</p>}
+              <button onClick={() => { setShowAdder(false); setAddError(""); }} className="text-[10px] text-zinc-400 hover:text-zinc-600">取消</button>
             </div>
           )}
         </div>
