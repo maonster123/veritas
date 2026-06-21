@@ -8,6 +8,7 @@ interface CrossRefWork {
   title?: string[];
   author?: { given?: string; family?: string; name?: string }[];
   "container-title"?: string[];
+  "short-container-title"?: string[];
   volume?: string;
   issue?: string;
   page?: string;
@@ -22,6 +23,7 @@ export interface ResolvedReference {
   title: string;
   authors: Author[];
   journal: string | null;
+  shortJournal: string | null;
   volume: string | null;
   issue: string | null;
   pages: string | null;
@@ -67,6 +69,7 @@ async function fetchCrossRef(doi: string): Promise<ResolvedReference | null> {
     title: work.title?.[0] ?? "Unknown Title",
     authors: parseAuthors(work),
     journal: work["container-title"]?.[0] ?? null,
+    shortJournal: work["short-container-title"]?.[0] ?? null,
     volume: work.volume ?? null,
     issue: work.issue ?? null,
     pages: work.page ?? null,
@@ -96,6 +99,7 @@ async function fetchDataCite(doi: string): Promise<ResolvedReference | null> {
       order: i,
     })),
     journal: attrs.container?.title ?? null,
+    shortJournal: null,
     volume: attrs.container?.volume ?? null,
     issue: attrs.container?.issue ?? null,
     pages: `${attrs.container?.firstPage ?? ""}${attrs.container?.firstPage && attrs.container?.lastPage ? "-" + attrs.container?.lastPage : ""}` || null,
