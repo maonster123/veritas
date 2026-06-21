@@ -43,10 +43,10 @@ export default async function ExportPage({
         headerFooter: JSON.parse(formatRule.headerFooter),
       }
     : {
-        pageMargins: { top: 25, bottom: 25, left: 30, right: 25 },
-        lineSpacing: 1.5,
+        pageMargins: { top: 25.4, bottom: 25.4, left: 25.4, right: 25.4 },
+        lineSpacing: 2,
         headingStyles: {},
-        bodyFont: { family: "SimSun", size: 12 },
+        bodyFont: { family: "Times New Roman", size: 12 },
         headerFooter: {},
       };
 
@@ -72,16 +72,6 @@ export default async function ExportPage({
 
   const fontFamily = formatConfig.bodyFont.family;
   const fontSize = formatConfig.bodyFont.size;
-  const headingStyle = (level: number) => {
-    const key = `level${level}`;
-    const style = formatConfig.headingStyles[key];
-    if (!style) return {};
-    return {
-      fontFamily: style.font,
-      fontSize: style.size,
-      fontWeight: style.bold ? "bold" : "normal",
-    };
-  };
 
   return (
     <html>
@@ -90,26 +80,27 @@ export default async function ExportPage({
         <style>{`
           @page {
             size: A4;
-            margin: ${formatConfig.pageMargins.top}mm ${formatConfig.pageMargins.right}mm ${formatConfig.pageMargins.bottom}mm ${formatConfig.pageMargins.left}mm;
+            margin: 25.4mm;
           }
           body {
             font-family: "${fontFamily}", serif;
             font-size: ${fontSize}pt;
             line-height: ${formatConfig.lineSpacing};
             color: #000;
-            max-width: 210mm;
-            margin: 0 auto;
-            padding: ${formatConfig.pageMargins.top}mm ${formatConfig.pageMargins.right}mm;
           }
-          h1 { font-size: ${headingStyle(1).fontSize ?? 16}pt; font-weight: ${headingStyle(1).fontWeight ?? "bold"}; }
-          h2 { font-size: ${headingStyle(2).fontSize ?? 14}pt; font-weight: ${headingStyle(2).fontWeight ?? "bold"}; }
-          h3 { font-size: ${headingStyle(3).fontSize ?? 12}pt; font-weight: ${headingStyle(3).fontWeight ?? "bold"}; }
-          .title { text-align: center; font-size: 18pt; font-weight: bold; margin-bottom: 12pt; }
-          .subtitle { text-align: center; font-size: 14pt; margin-bottom: 24pt; }
-          .references { margin-top: 24pt; border-top: 1px solid #000; padding-top: 12pt; }
+          h1 { font-size: 12pt; font-weight: bold; text-align: center; margin-top: 18pt; }
+          h2 { font-size: 12pt; font-weight: bold; text-align: left; margin-top: 14pt; }
+          h3 { font-size: 12pt; font-weight: bold; font-style: italic; text-align: left; margin-top: 12pt; }
+          h4 { font-size: 12pt; font-weight: bold; }
+          p { text-indent: 12.7mm; margin: 0; }
+          ul { text-indent: 12.7mm; margin: 0; padding-left: 24mm; }
+          ul li { list-style-type: disc; }
+          .title { font-size: 12pt; font-weight: bold; text-align: center; text-indent: 0; margin-bottom: 12pt; margin-top: 60pt; }
+          .subtitle { font-size: 12pt; text-align: center; text-indent: 0; margin-bottom: 24pt; }
+          .ref-entry { padding-left: 12.7mm; text-indent: -12.7mm; margin: 0; font-size: 12pt; }
           @media print {
-            button { display: none; }
-            body { padding: 0; }
+            button { display: none !important; }
+            body { margin: 0; padding: 0; }
           }
         `}</style>
       </head>
@@ -122,10 +113,10 @@ export default async function ExportPage({
         {docData.sections.map((section) => renderSection(section))}
 
         {docData.references.length > 0 && (
-          <div className="references">
+          <div style={{ marginTop: "24pt" }}>
             <h2>参考文献</h2>
             {docData.references.map((ref) => (
-              <p key={ref.id}>{ref.text}</p>
+              <p key={ref.id} className="ref-entry">{ref.text}</p>
             ))}
           </div>
         )}

@@ -7,6 +7,8 @@ import {
   HeadingLevel,
   AlignmentType,
   convertMillimetersToTwip,
+  TabStopPosition,
+  TabStopType,
 } from "docx";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -14,6 +16,16 @@ import { getOutlineTree } from "@/app/actions/outline";
 import { buildTree } from "@/lib/outline-utils";
 import { buildDocument, type FormatConfig, type CitationConfig } from "@/lib/document-builder";
 import type { ParsedInline } from "@/lib/markdown-parser";
+
+// APA 7th standard metrics
+const APA_MARGIN_MM = 25.4; // 1 inch = 2.54 cm
+const APA_INDENT_MM = 12.7; // 0.5 inch = 1.27 cm
+const APA_FONT = "Times New Roman";
+const APA_SIZE_PT = 12;
+const APA_LINE_SPACING = 480; // double spacing in twips
+
+const MARGIN = convertMillimetersToTwip(APA_MARGIN_MM);
+const FIRST_INDENT = convertMillimetersToTwip(APA_INDENT_MM);
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -34,6 +46,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const isEnglish = project.lang === "en";
+
   const nodes = await getOutlineTree(projectId);
   const tree = buildTree(nodes as any);
 
@@ -47,14 +61,10 @@ export async function GET(request: NextRequest) {
         headerFooter: JSON.parse(formatRule.headerFooter),
       }
     : {
-        pageMargins: { top: 25, bottom: 25, left: 30, right: 25 },
-        lineSpacing: 1.5,
-        headingStyles: {
-          level1: { font: "SimHei", size: 16, bold: true },
-          level2: { font: "SimHei", size: 14, bold: true },
-          level3: { font: "SimHei", size: 12, bold: true },
-        },
-        bodyFont: { family: "SimSun", size: 12 },
+        pageMargins: { top: APA_MARGIN_MM, bottom: APA_MARGIN_MM, left: APA_MARGIN_MM, right: APA_MARGIN_MM },
+        lineSpacing: 2.0,
+        headingStyles: {},
+        bodyFont: { family: APA_FONT, size: APA_SIZE_PT },
         headerFooter: {},
       };
 
@@ -78,54 +88,81 @@ export async function GET(request: NextRequest) {
 
   const docData = buildDocument(project, tree, formatConfig, citationConfig);
 
+  // Base text run properties
+  const baseRun = { font: APA_FONT, size: APA_SIZE_PT * 10 }; // docx uses half-points
+
   const doc = new Document({
     styles: {
       default: {
-        document: {
-          run: {
-            font: formatConfig.bodyFont.family,
-            size: formatConfig.bodyFont.size * 10,
-          },
-        },
+        document: { run: baseRun },
       },
     },
     sections: [
       {
         properties: {
           page: {
-            margin: {
-              top: convertMillimetersToTwip(formatConfig.pageMargins.top),
-              bottom: convertMillimetersToTwip(formatConfig.pageMargins.bottom),
-              left: convertMillimetersToTwip(formatConfig.pageMargins.left),
-              right: convertMillimetersToTwip(formatConfig.pageMargins.right),
-            },
+            margin: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN },
           },
         },
         children: [
+          // ── Title Page ──
+          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
+          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
+          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
+          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
+          // Title — bold, centered
           new Paragraph({
-            text: docData.title,
-            heading: HeadingLevel.TITLE,
+            children: [new TextRun({ text: docData.title, bold: true, ...baseRun })],
             alignment: AlignmentType.CENTER,
+            spacing: { line: APA_LINE_SPACING },
           }),
+          // Subtitle if present
           ...(docData.subtitle
+            ? [new Paragraph({
+                text: docData.subtitle,
+                alignment: AlignmentType.CENTER,
+                spacing: { line: APA_LINE_SPACING },
+              })]
+            : []),
+          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
+          // Author placeholder
+          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
+          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
+
+          // ── Abstract page (if English) ──
+          ...(isEnglish
             ? [
+                new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
                 new Paragraph({
-                  text: docData.subtitle,
+                  children: [new TextRun({ text: "Abstract", bold: true, ...baseRun })],
                   alignment: AlignmentType.CENTER,
+                  heading: HeadingLevel.HEADING_1,
+                  spacing: { line: APA_LINE_SPACING },
+                }),
+                new Paragraph({
+                  text: "Keywords: ",
+                  spacing: { line: APA_LINE_SPACING },
+                  indent: { firstLine: FIRST_INDENT },
                 }),
               ]
             : []),
-          new Paragraph({ text: "" }),
-          ...renderSections(docData.sections),
+
+          // ── Body sections ──
+          ...renderSections(docData.sections, baseRun),
+
+          // ── References ──
           new Paragraph({
-            text: "参考文献",
+            children: [new TextRun({ text: isEnglish ? "References" : "参考文献", bold: true, ...baseRun })],
+            alignment: AlignmentType.CENTER,
             heading: HeadingLevel.HEADING_1,
+            spacing: { line: APA_LINE_SPACING, after: 200 },
           }),
           ...docData.references.map(
             (ref) =>
               new Paragraph({
                 text: ref.text,
-                spacing: { after: 120 },
+                spacing: { line: APA_LINE_SPACING },
+                indent: { left: FIRST_INDENT, hanging: FIRST_INDENT },
               })
           ),
         ],
@@ -137,54 +174,66 @@ export async function GET(request: NextRequest) {
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {
-      "Content-Type":
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "Content-Disposition": `attachment; filename="${encodeURIComponent(docData.title)}.docx"`,
     },
   });
 }
 
-function renderSections(sections: any[]): Paragraph[] {
+// ── Section rendering ──
+
+function renderSections(sections: any[], baseRun: { font: string; size: number }): Paragraph[] {
   const result: Paragraph[] = [];
 
   for (const section of sections) {
-    const headingLevels: Record<number, (typeof HeadingLevel)[keyof typeof HeadingLevel]> = {
-      1: HeadingLevel.HEADING_1,
-      2: HeadingLevel.HEADING_2,
-      3: HeadingLevel.HEADING_3,
-      4: HeadingLevel.HEADING_4,
-    };
+    // Level 1: Centered bold
+    // Level 2: Left bold
+    // Level 3: Left bold italic
+    const isL1 = section.level === 1;
+    const isL2 = section.level === 2;
+    const isL3 = section.level === 3;
 
     result.push(
       new Paragraph({
-        text: section.title,
-        heading: headingLevels[section.level] ?? HeadingLevel.HEADING_4,
+        children: [
+          new TextRun({
+            text: section.title,
+            bold: true,
+            italics: isL3,
+            ...baseRun,
+          }),
+        ],
+        alignment: isL1 ? AlignmentType.CENTER : AlignmentType.LEFT,
+        spacing: { line: APA_LINE_SPACING, before: 200, after: 100 },
       })
     );
 
     for (const seg of section.segments) {
-      result.push(...renderSegment(seg));
+      result.push(...renderSegment(seg, baseRun));
     }
 
-    result.push(...renderSections(section.children));
+    result.push(...renderSections(section.children, baseRun));
   }
 
   return result;
 }
 
-function renderSegment(seg: any): Paragraph[] {
+function renderSegment(seg: any, baseRun: { font: string; size: number }): Paragraph[] {
   switch (seg.type) {
     case "heading": {
-      const levels: Record<number, (typeof HeadingLevel)[keyof typeof HeadingLevel]> = {
-        1: HeadingLevel.HEADING_1,
-        2: HeadingLevel.HEADING_2,
-        3: HeadingLevel.HEADING_3,
-        4: HeadingLevel.HEADING_4,
-      };
+      const hLevel = (seg.level ?? 1) + 1;
       return [
         new Paragraph({
-          text: seg.content?.map((i: ParsedInline) => i.text).join("") ?? "",
-          heading: levels[seg.level ?? 1] ?? HeadingLevel.HEADING_4,
+          children: [
+            new TextRun({
+              text: seg.content?.map((i: ParsedInline) => i.text).join("") ?? "",
+              bold: true,
+              italics: hLevel >= 3,
+              ...baseRun,
+            }),
+          ],
+          alignment: hLevel <= 1 ? AlignmentType.CENTER : AlignmentType.LEFT,
+          spacing: { line: APA_LINE_SPACING, before: 200, after: 100 },
         }),
       ];
     }
@@ -193,12 +242,10 @@ function renderSegment(seg: any): Paragraph[] {
         new Paragraph({
           children: (seg.content as ParsedInline[]).map(
             (i) =>
-              new TextRun({
-                text: i.text,
-                bold: i.bold,
-                italics: i.italic,
-              })
+              new TextRun({ text: i.text, bold: i.bold, italics: i.italic, ...baseRun })
           ),
+          spacing: { line: APA_LINE_SPACING },
+          indent: { firstLine: FIRST_INDENT },
         }),
       ];
     case "list":
@@ -206,16 +253,11 @@ function renderSegment(seg: any): Paragraph[] {
         (item) =>
           new Paragraph({
             children: [
-              new TextRun({ text: "•\t" }),
-              ...item.map(
-                (i) =>
-                  new TextRun({
-                    text: i.text,
-                    bold: i.bold,
-                    italics: i.italic,
-                  })
-              ),
+              new TextRun({ text: "\t•\t", ...baseRun }),
+              ...item.map((i) => new TextRun({ text: i.text, bold: i.bold, italics: i.italic, ...baseRun })),
             ],
+            spacing: { line: APA_LINE_SPACING },
+            indent: { firstLine: FIRST_INDENT },
           })
       );
     default:
