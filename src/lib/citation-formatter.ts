@@ -89,6 +89,44 @@ function formatAuthorsIEEE(authors: AuthorEntry[]): string {
     .join(", ");
 }
 
+// ── IEEE Journal Abbreviations ──
+
+const IEEE_JOURNAL_ABBRS: Record<string, string> = {
+  "American Psychologist": "Am. Psychol.",
+  "American Journal of Psychiatry": "Am. J. Psychiatry",
+  "American Journal of Psychology": "Am. J. Psychol.",
+  "Journal of Applied Psychology": "J. Appl. Psychol.",
+  "Journal of Consulting and Clinical Psychology": "J. Consult. Clin. Psychol.",
+  "Journal of Counseling Psychology": "J. Couns. Psychol.",
+  "Journal of Personality and Social Psychology": "J. Pers. Soc. Psychol.",
+  "Journal of Abnormal Psychology": "J. Abnorm. Psychol.",
+  "Psychological Bulletin": "Psychol. Bull.",
+  "Psychological Review": "Psychol. Rev.",
+  "Clinical Psychology Review": "Clin. Psychol. Rev.",
+  "Clinical Psychology: Science and Practice": "Clin. Psychol. Sci. Pract.",
+  "Psychotherapy": "Psychotherapy",
+  "Psychotherapy Research": "Psychother. Res.",
+  "Behavior Therapy": "Behav. Ther.",
+  "Cognitive Therapy and Research": "Cogn. Ther. Res.",
+  "Journal of Experimental Psychology: General": "J. Exp. Psychol. Gen.",
+  "Journal of Experimental Psychology: Learning, Memory, and Cognition": "J. Exp. Psychol. Learn. Mem. Cogn.",
+  "Developmental Psychology": "Dev. Psychol.",
+  "Health Psychology": "Health Psychol.",
+  "Professional Psychology: Research and Practice": "Prof. Psychol. Res. Pract.",
+  "British Medical Journal": "BMJ",
+  "JAMA: Journal of the American Medical Association": "JAMA",
+  "The Lancet": "Lancet",
+  "New England Journal of Medicine": "N. Engl. J. Med.",
+  "Science": "Science",
+  "Nature": "Nature",
+  "Proceedings of the National Academy of Sciences": "Proc. Natl. Acad. Sci.",
+  "PLOS ONE": "PLOS ONE",
+};
+
+function abbreviateJournal(name: string): string {
+  return IEEE_JOURNAL_ABBRS[name] ?? name;
+}
+
 // ── MLA Title Case ──
 
 const MLA_LOWERCASE = new Set([
@@ -158,11 +196,13 @@ export function formatReferenceEntry(
   const isMLA = style.formatType === "author_page";
   const isIEEE = style.name === "IEEE";
   const displayTitle = (isMLA || isIEEE) ? toTitleCase(ref.title) : ref.title;
+  // IEEE: abbreviate journal name
+  const displayJournal = isIEEE ? abbreviateJournal(ref.journal ?? "") : (ref.journal ?? "");
 
   const vars: Record<string, string> = {
     authors: authorsStr,
     title: displayTitle,
-    journal: ref.journal ?? "",
+    journal: displayJournal,
     volume: ref.volume ?? "",
     issue: ref.issue ?? "",
     pages: ref.pages ?? "",
