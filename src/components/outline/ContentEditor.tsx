@@ -5,6 +5,7 @@ import type { FlatNode } from "@/lib/outline-utils";
 import { generateAIContent, recommendResources, normalizeCitation, saveDeepseekKey } from "@/app/actions/ai-generate";
 import { sendMessage, getChatHistory } from "@/app/actions/chat";
 import { unlinkReference, linkReference } from "@/app/actions/outline";
+import { lookupAndSaveDOI } from "@/app/actions/lookup-doi";
 
 interface Props {
   node: FlatNode | null;
@@ -291,8 +292,23 @@ function parseRefAuthors(authorsJson: string): string {
 function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }) {
   const refs = node.outlineReferences ?? [];
   const [collapsed, setCollapsed] = useState(true);
+  const [showAdder, setShowAdder] = useState(false);
+  const [doiInput, setDoiInput] = useState("");
+  const [adding, setAdding] = useState(false);
 
-  if (refs.length === 0) return null;
+  const handleAddDoi = async () => {
+    if (!doiInput.trim()) return;
+    setAdding(true);
+    try {
+      const result = await lookupAndSaveDOI(doiInput.trim(), node.projectId);
+      if (result.success && result.reference) {
+        await linkReference(node.id, result.reference.id);
+        setDoiInput("");
+        onReload();
+      }
+    } catch { /* ignore */ }
+    setAdding(false);
+  };
 
   return (
     <div className="border-t border-zinc-200 dark:border-zinc-800 shrink-0">
@@ -301,39 +317,75 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
         className="w-full px-4 py-2 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
       >
         <span className="text-xs font-medium text-zinc-500">
-          本章引用 ({refs.length})
+          本章引用 {refs.length > 0 ? `(${refs.length})` : ""}
         </span>
         <span className="text-xs text-zinc-400">{collapsed ? "▸" : "▾"}</span>
       </button>
       {!collapsed && (
-        <div className="px-4 pb-3 space-y-1.5 max-h-[200px] overflow-y-auto">
-          {refs.map((or, i) => {
-            const r = or.reference;
-            const authors = parseRefAuthors(r.authors);
-            const year = r.year ?? "n.d.";
-            return (
-              <div key={or.id} className="flex items-start gap-2 group py-1">
-                <span className="text-[10px] text-zinc-400 mt-0.5 shrink-0">[{i + 1}]</span>
-                <p className="flex-1 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed min-w-0">
-                  {authors ? `${authors} ` : ""}({year}). {r.title}
-                  {r.journal ? `. ${r.journal}` : ""}
-                  {r.volume ? `, ${r.volume}` : ""}
-                  {r.issue ? `(${r.issue})` : ""}
-                  {r.pages ? `, ${r.pages}` : ""}.
-                </p>
+        <div className="px-4 pb-3 space-y-2">
+          {refs.length > 0 && (
+            <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+              {refs.map((or, i) => {
+                const r = or.reference;
+                const authors = parseRefAuthors(r.authors);
+                const year = r.year ?? "n.d.";
+                return (
+                  <div key={or.id} className="flex items-start gap-2 group py-1">
+                    <span className="text-[10px] text-zinc-400 mt-0.5 shrink-0">[{i + 1}]</span>
+                    <p className="flex-1 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed min-w-0">
+                      {authors ? `${authors} ` : ""}({year}). {r.title}
+                      {r.journal ? `. ${r.journal}` : ""}
+                      {r.volume ? `, ${r.volume}` : ""}
+                      {r.issue ? `(${r.issue})` : ""}
+                      {r.pages ? `, ${r.pages}` : ""}.
+                    </p>
+                    <button
+                      onClick={async () => {
+                        await unlinkReference(or.id);
+                        onReload();
+                      }}
+                      className="shrink-0 text-[10px] text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                      title="移除引用"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Add reference */}
+          {!showAdder ? (
+            <button
+              onClick={() => setShowAdder(true)}
+              className="text-xs text-blue-500 hover:text-blue-600"
+            >
+              + 添加文献
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-[10px] text-zinc-400">粘贴 DOI 添加文献到本章：</p>
+              <div className="flex gap-2">
+                <input
+                  value={doiInput}
+                  onChange={e => setDoiInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleAddDoi(); }}
+                  placeholder="10.xxxx/xxxxx"
+                  disabled={adding}
+                  className="flex-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
                 <button
-                  onClick={async () => {
-                    await unlinkReference(or.id);
-                    onReload();
-                  }}
-                  className="shrink-0 text-[10px] text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
-                  title="移除引用"
+                  onClick={handleAddDoi}
+                  disabled={adding || !doiInput.trim()}
+                  className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
                 >
-                  ✕
+                  {adding ? "查找中..." : "添加"}
                 </button>
               </div>
-            );
-          })}
+              <button onClick={() => setShowAdder(false)} className="text-[10px] text-zinc-400 hover:text-zinc-600">取消</button>
+            </div>
+          )}
         </div>
       )}
     </div>
