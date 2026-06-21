@@ -303,9 +303,15 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
     setAdding(true);
     setAddError("");
 
-    // Extract DOI from pasted text (plain DOI or full citation with DOI)
+    // Extract DOI from pasted text
     const doiMatch = raw.match(/10\.\d{4,}\/[^\s"')\]]+/i);
-    const doi = doiMatch ? doiMatch[0].replace(/[.,;]+$/, "") : raw;
+    const doi = doiMatch ? doiMatch[0].replace(/[.,;]+$/, "") : null;
+
+    if (!doi) {
+      setAddError("未检测到 DOI。请粘贴包含 DOI 编号（如 10.1037/amp.61.4.271）的引用文本，或直接粘贴 DOI 编号。");
+      setAdding(false);
+      return;
+    }
 
     try {
       const result = await lookupAndSaveDOI(node.projectId, doi);
