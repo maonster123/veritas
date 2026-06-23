@@ -129,18 +129,13 @@ export async function GET(request: NextRequest) {
           new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
           new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
 
-          // ── Abstract page (if English) ──
-          ...(isEnglish
+          // ── Abstract page (if English) / Keywords ──
+          ...(project.keywords
             ? [
                 new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
                 new Paragraph({
-                  children: [new TextRun({ text: "Abstract", bold: true, ...baseRun })],
-                  alignment: AlignmentType.CENTER,
-                  heading: HeadingLevel.HEADING_1,
-                  spacing: { line: APA_LINE_SPACING },
-                }),
-                new Paragraph({
-                  text: "Keywords: ",
+                  children: [new TextRun({ text: isEnglish ? "Keywords" : "关键词", bold: true, italics: true, ...baseRun }),
+                    new TextRun({ text: `: ${project.keywords}`, ...baseRun })],
                   spacing: { line: APA_LINE_SPACING },
                   indent: { firstLine: FIRST_INDENT },
                 }),

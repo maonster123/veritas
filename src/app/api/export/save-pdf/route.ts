@@ -63,6 +63,9 @@ export async function GET(request: NextRequest) {
   const docData = buildDocument(project, tree, formatConfig, citationConfig);
 
   const sectionsHtml = docData.sections.map(renderSectionHtml).join("\n");
+  const keywordsHtml = project.keywords
+    ? `<p style="text-indent:12.7mm;margin-top:12pt;"><em>${project.lang === "en" ? "Keywords" : "关键词"}</em>: ${project.keywords}</p>`
+    : "";
   const refsHtml = docData.references.length > 0
     ? `<h2>${project.lang === "en" ? "References" : "参考文献"}</h2>\n${docData.references.map(r => `<p class="ref-entry">${r.text}</p>`).join("\n")}`
     : "";
@@ -87,6 +90,7 @@ ul li { list-style-type: disc; }
 <body>
 <div class="title">${docData.title}</div>
 ${docData.subtitle ? `<div class="subtitle">${docData.subtitle}</div>` : ""}
+${keywordsHtml}
 ${sectionsHtml}
 ${refsHtml}
 </body></html>`;

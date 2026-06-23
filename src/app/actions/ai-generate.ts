@@ -408,6 +408,81 @@ export async function normalizeCitation(
   }
 }
 
+// ── Keyword Generation ──
+
+export async function generateKeywords(
+  projectId: string
+): Promise<{ success: boolean; keywords?: string; error?: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: "请先登录" };
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { deepseekApiKey: true },
+    });
+    if (!currentUser?.deepseekApiKey) return { success: false, error: "MISSING_KEY" };
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { userId: true, title: true, lang: true },
+    });
+    if (!project || project.userId !== session.user.id) return { success: false, error: "无权操作" };
+
+    // Get chapter titles for context
+    const chapters = await prisma.outlineNode.findMany({
+      where: { projectId, type: "chapter" },
+      select: { title: true },
+      orderBy: { sortOrder: "asc" },
+    });
+
+    const chapterTitles = chapters.map(c => c.title).join(", ");
+    const isEn = project.lang === "en";
+
+    const systemPrompt = isEn
+      ? `Extract 3-5 keywords from the thesis title and chapter titles. Return ONLY the keywords, separated by commas. No explanations.`
+      : `从论文标题和章节标题中提取 3-5 个关键词。只返回用逗号分隔的关键词，不要解释。`;
+
+    const userPrompt = isEn
+      ? `Thesis: "${project.title}". Chapters: ${chapterTitles}. Extract 3-5 academic keywords.`
+      : `论文标题：「${project.title}」。章节标题：${chapterTitles}。提取 3-5 个学术关键词。`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${currentUser.deepseekApiKey}`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 128,
+      }),
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
+
+    if (!res.ok) return { success: false, error: `API 错误 ${res.status}` };
+    const data = await res.json();
+    const keywords = data.choices?.[0]?.message?.content?.trim();
+    if (!keywords) return { success: false, error: "AI 返回为空" };
+
+    // Save to project
+    await prisma.project.update({ where: { id: projectId }, data: { keywords } });
+
+    return { success: true, keywords };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") return { success: false, error: "请求超时" };
+    return { success: false, error: error instanceof Error ? error.message : "未知错误" };
+  }
+}
+
 export async function saveDeepseekKey(apiKey: string): Promise<{ success: boolean; error?: string }> {
   try {
     const session = await auth();

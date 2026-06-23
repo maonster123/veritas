@@ -13,11 +13,12 @@ interface OutlineAppProps {
   projectId: string;
   title: string;
   subtitle: string | null;
+  keywords: string | null;
   lang: string;
   hasApiKey: boolean;
 }
 
-export default function OutlineApp({ projectId, title, subtitle, lang, hasApiKey }: OutlineAppProps) {
+export default function OutlineApp({ projectId, title, subtitle, keywords, lang, hasApiKey }: OutlineAppProps) {
   const { state, dispatch, loadTree, select, handleAdd, handleUpdate, handleDelete, handleMove } =
     useOutlineTree(projectId);
 
@@ -61,7 +62,7 @@ export default function OutlineApp({ projectId, title, subtitle, lang, hasApiKey
     <div className="flex flex-1 h-screen">
       {/* Left: Outline tree */}
       <div className="w-96 shrink-0 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto bg-zinc-50 dark:bg-zinc-950">
-        <ProjectTitleBar projectId={projectId} title={title} subtitle={subtitle} />
+        <ProjectTitleBar projectId={projectId} title={title} subtitle={subtitle} keywords={keywords} />
         <div className="sticky top-0 z-10 px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between">
           <span className="text-xs font-medium text-zinc-500">大纲</span>
           <div className="flex items-center gap-2">

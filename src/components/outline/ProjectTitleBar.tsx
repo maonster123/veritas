@@ -2,18 +2,22 @@
 
 import { useState } from "react";
 import { updateProject } from "@/app/actions/project";
+import { generateKeywords } from "@/app/actions/ai-generate";
 
 interface Props {
   projectId: string;
   title: string;
   subtitle: string | null;
+  keywords: string | null;
 }
 
-export default function ProjectTitleBar({ projectId, title, subtitle }: Props) {
+export default function ProjectTitleBar({ projectId, title, subtitle, keywords }: Props) {
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingSubtitle, setEditingSubtitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(title);
   const [subtitleDraft, setSubtitleDraft] = useState(subtitle ?? "");
+  const [localKeywords, setLocalKeywords] = useState(keywords ?? "");
+  const [loadingKw, setLoadingKw] = useState(false);
 
   const saveTitle = async () => {
     const trimmed = titleDraft.trim();
@@ -98,6 +102,31 @@ export default function ProjectTitleBar({ projectId, title, subtitle }: Props) {
           添加副标题...
         </p>
       )}
+
+      {/* Keywords */}
+      <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800">
+        <div className="flex items-center gap-2">
+          <input
+            value={localKeywords}
+            onChange={(e) => setLocalKeywords(e.target.value)}
+            onBlur={() => updateProject(projectId, { subtitle: subtitle ?? undefined, keywords: localKeywords || undefined } as any)}
+            placeholder="关键词（逗号分隔）"
+            className="flex-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-zinc-600 dark:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-zinc-400"
+          />
+          <button
+            onClick={async () => {
+              setLoadingKw(true);
+              const r = await generateKeywords(projectId);
+              if (r.success && r.keywords) setLocalKeywords(r.keywords);
+              setLoadingKw(false);
+            }}
+            disabled={loadingKw}
+            className="shrink-0 text-[10px] px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
+          >
+            {loadingKw ? "..." : "AI生成"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
