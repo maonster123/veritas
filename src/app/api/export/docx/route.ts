@@ -7,11 +7,11 @@ import {
   HeadingLevel,
   AlignmentType,
   convertMillimetersToTwip,
-  TabStopPosition,
-  TabStopType,
 } from "docx";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { writeFileSync } from "fs";
+import { join } from "path";
 import { getOutlineTree } from "@/app/actions/outline";
 import { buildTree } from "@/lib/outline-utils";
 import { buildDocument, type FormatConfig, type CitationConfig } from "@/lib/document-builder";
@@ -171,6 +171,13 @@ export async function GET(request: NextRequest) {
   });
 
   const buffer = await Packer.toBuffer(doc);
+
+  // Save to Desktop
+  try {
+    const desktop = join(process.env.USERPROFILE || process.env.HOME || "", "Desktop");
+    const safeName = docData.title.replace(/[\\/:*?"<>|]/g, "_");
+    writeFileSync(join(desktop, `${safeName}.docx`), Buffer.from(buffer));
+  } catch { /* ignore save errors */ }
 
   return new NextResponse(new Uint8Array(buffer), {
     headers: {

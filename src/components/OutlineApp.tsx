@@ -88,19 +88,30 @@ export default function OutlineApp({ projectId, title, subtitle, lang, hasApiKey
                 导出
               </button>
               {showExport && (
-                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded shadow-lg z-20 py-1 min-w-[140px]">
+                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded shadow-lg z-20 py-1 min-w-[160px]">
                   <a
                     href={`/api/export/docx?projectId=${projectId}`}
+                    onClick={() => setTimeout(() => setShowExport(false), 500)}
                     className="block px-4 py-2 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
-                    Word (.docx)
+                    Word (.docx) → 桌面
                   </a>
+                  <button
+                    onClick={async () => {
+                      setShowExport(false);
+                      await fetch(`/api/export/save-pdf?projectId=${projectId}`);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    网页 (.html) → 桌面
+                  </button>
                   <a
                     href={`/export?projectId=${projectId}`}
                     target="_blank"
-                    className="block px-4 py-2 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    onClick={() => setTimeout(() => setShowExport(false), 500)}
+                    className="block px-4 py-2 text-xs text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                   >
-                    打印 PDF
+                    打印预览
                   </a>
                 </div>
               )}

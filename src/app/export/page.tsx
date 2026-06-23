@@ -6,6 +6,8 @@ import { buildTree } from "@/lib/outline-utils";
 import { buildDocument, type FormatConfig, type CitationConfig } from "@/lib/document-builder";
 import type { ParsedInline } from "@/lib/markdown-parser";
 import PrintButton from "@/components/export/PrintButton";
+import { writeFileSync } from "fs";
+import { join } from "path";
 
 export default async function ExportPage({
   searchParams,
