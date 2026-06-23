@@ -57,7 +57,7 @@ export async function updateProjectLang(
 
 export async function updateProject(
   projectId: string,
-  data: { title?: string; subtitle?: string }
+  data: { title?: string; subtitle?: string; keywords?: string | null }
 ): Promise<{ success: boolean; error?: string }> {
   const session = await auth();
   if (!session?.user?.id) return { success: false, error: "请先登录" };

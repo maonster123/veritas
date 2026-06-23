@@ -109,7 +109,7 @@ export default function ProjectTitleBar({ projectId, title, subtitle, keywords }
           <input
             value={localKeywords}
             onChange={(e) => setLocalKeywords(e.target.value)}
-            onBlur={() => updateProject(projectId, { subtitle: subtitle ?? undefined, keywords: localKeywords || undefined } as any)}
+            onBlur={() => updateProject(projectId, { keywords: localKeywords || null })}
             placeholder="关键词（逗号分隔）"
             className="flex-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded px-2 py-1 text-zinc-600 dark:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-zinc-400"
           />
