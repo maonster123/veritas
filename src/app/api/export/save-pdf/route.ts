@@ -62,51 +62,59 @@ export async function GET(request: NextRequest) {
 
   const docData = buildDocument(project, tree, formatConfig, citationConfig);
 
-  // Build HTML content
   const sectionsHtml = docData.sections.map(renderSectionHtml).join("\n");
-
   const refsHtml = docData.references.length > 0
-    ? `<h2>参考文献</h2>\n${docData.references.map(r => `<p class="ref-entry">${r.text}</p>`).join("\n")}`
+    ? `<h2>${project.lang === "en" ? "References" : "参考文献"}</h2>\n${docData.references.map(r => `<p class="ref-entry">${r.text}</p>`).join("\n")}`
     : "";
 
   const html = `<!DOCTYPE html>
-<html lang="zh">
-<head>
-<meta charset="utf-8">
-<title>${docData.title}</title>
+<html lang="${project.lang}">
+<head><meta charset="utf-8"><title>${docData.title}</title>
 <style>
 @page { size: A4; margin: 25.4mm; }
-body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 2; color: #000; }
-h1 { font-size: 12pt; font-weight: bold; text-align: center; margin-top: 18pt; }
-h2 { font-size: 12pt; font-weight: bold; text-align: left; margin-top: 14pt; }
-h3 { font-size: 12pt; font-weight: bold; font-style: italic; text-align: left; margin-top: 12pt; }
-h4 { font-size: 12pt; font-weight: bold; }
+body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 2; color: #000; margin: 0; }
+h1 { font-size: 12pt; font-weight: bold; text-align: center; margin: 18pt 0 6pt 0; }
+h2 { font-size: 12pt; font-weight: bold; text-align: left; margin: 14pt 0 6pt 0; }
+h3 { font-size: 12pt; font-weight: bold; font-style: italic; text-align: left; margin: 12pt 0 6pt 0; }
+h4 { font-size: 12pt; font-weight: bold; margin: 10pt 0 4pt 0; }
 p { text-indent: 12.7mm; margin: 0; }
 ul { text-indent: 12.7mm; margin: 0; padding-left: 24mm; }
 ul li { list-style-type: disc; }
-.title { font-size: 12pt; font-weight: bold; text-align: center; text-indent: 0; margin-bottom: 12pt; margin-top: 60pt; }
-.subtitle { font-size: 12pt; text-align: center; text-indent: 0; margin-bottom: 24pt; }
-.ref-entry { padding-left: 12.7mm; text-indent: -12.7mm; margin: 0; font-size: 12pt; }
-@media print {
-  body { margin: 0; padding: 0; }
-}
-</style>
-</head>
+.title { font-size: 12pt; font-weight: bold; text-align: center; text-indent: 0; margin: 60pt 0 12pt 0; }
+.subtitle { font-size: 12pt; text-align: center; text-indent: 0; margin: 0 0 24pt 0; }
+.ref-entry { padding-left: 12.7mm; text-indent: -12.7mm; margin: 0; }
+</style></head>
 <body>
 <div class="title">${docData.title}</div>
 ${docData.subtitle ? `<div class="subtitle">${docData.subtitle}</div>` : ""}
 ${sectionsHtml}
 ${refsHtml}
-</body>
-</html>`;
+</body></html>`;
 
   try {
+    // Use system Edge browser via puppeteer-core
+    const puppeteer = await import("puppeteer-core");
+    const browser = await puppeteer.launch({
+      executablePath: "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+      headless: true,
+      args: ["--no-sandbox", "--disable-gpu"],
+    });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "load" });
+    const pdf = await page.pdf({
+      format: "A4",
+      margin: { top: "25.4mm", bottom: "25.4mm", left: "25.4mm", right: "25.4mm" },
+      printBackground: true,
+    });
+    await browser.close();
+
     const desktop = join(process.env.USERPROFILE || process.env.HOME || "", "Desktop");
     const safeName = docData.title.replace(/[\\/:*?"<>|]/g, "_");
-    writeFileSync(join(desktop, `${safeName}.html`), html, "utf-8");
-    return NextResponse.json({ success: true, path: join(desktop, `${safeName}.html`) });
-  } catch {
-    return NextResponse.json({ error: "无法保存到桌面" }, { status: 500 });
+    writeFileSync(join(desktop, `${safeName}.pdf`), pdf);
+
+    return NextResponse.json({ success: true, path: join(desktop, `${safeName}.pdf`) });
+  } catch (err) {
+    return NextResponse.json({ error: `PDF生成失败: ${err instanceof Error ? err.message : "未知错误"}` }, { status: 500 });
   }
 }
 

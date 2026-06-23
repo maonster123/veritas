@@ -88,8 +88,8 @@ export async function GET(request: NextRequest) {
 
   const docData = buildDocument(project, tree, formatConfig, citationConfig);
 
-  // Base text run properties
-  const baseRun = { font: APA_FONT, size: APA_SIZE_PT * 10 }; // docx uses half-points
+  // Base text run properties (docx uses half-points: 24 = 12pt)
+  const baseRun = { font: APA_FONT, size: APA_SIZE_PT * 2 };
 
   const doc = new Document({
     styles: {
