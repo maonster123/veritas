@@ -62,6 +62,16 @@ export async function GET(request: NextRequest) {
 
   const docData = buildDocument(project, tree, formatConfig, citationConfig);
 
+  // Title page info
+  const tp: Record<string, string> = project.titlePage ? (() => { try { return JSON.parse(project.titlePage); } catch { return {}; } })() : {};
+  const titlePageHtml = [
+    tp.authorName ? `<p style="text-indent:0;text-align:center;">${tp.authorName}</p>` : "",
+    tp.institution ? `<p style="text-indent:0;text-align:center;">${tp.institution}</p>` : "",
+    tp.course ? `<p style="text-indent:0;text-align:center;">${tp.course}</p>` : "",
+    tp.instructor ? `<p style="text-indent:0;text-align:center;">${tp.instructor}</p>` : "",
+    tp.date ? `<p style="text-indent:0;text-align:center;">${tp.date}</p>` : "",
+  ].filter(Boolean).join("\n");
+
   const sectionsHtml = docData.sections.map(renderSectionHtml).join("\n");
   const keywordsHtml = project.keywords
     ? `<p style="text-indent:12.7mm;margin-top:12pt;"><em>${project.lang === "en" ? "Keywords" : "关键词"}</em>: ${project.keywords}</p>`
@@ -90,6 +100,8 @@ ul li { list-style-type: disc; }
 <body>
 <div class="title">${docData.title}</div>
 ${docData.subtitle ? `<div class="subtitle">${docData.subtitle}</div>` : ""}
+${titlePageHtml}
+<div style="height:24pt;"></div>
 ${keywordsHtml}
 ${sectionsHtml}
 ${refsHtml}

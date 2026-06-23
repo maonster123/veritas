@@ -44,5 +44,5 @@ export default async function Home() {
   });
   const hasApiKey = !!user?.deepseekApiKey;
 
-  return <OutlineApp projectId={project.id} title={project.title} subtitle={project.subtitle} keywords={project.keywords} lang={project.lang} hasApiKey={hasApiKey} />;
+  return <OutlineApp projectId={project.id} title={project.title} subtitle={project.subtitle} keywords={project.keywords} titlePage={project.titlePage} lang={project.lang} hasApiKey={hasApiKey} />;
 }

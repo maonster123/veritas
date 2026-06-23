@@ -106,28 +106,34 @@ export async function GET(request: NextRequest) {
         },
         children: [
           // ── Title Page ──
-          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
-          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
-          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
-          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
-          // Title — bold, centered
-          new Paragraph({
-            children: [new TextRun({ text: docData.title, bold: true, ...baseRun })],
-            alignment: AlignmentType.CENTER,
-            spacing: { line: APA_LINE_SPACING },
-          }),
-          // Subtitle if present
-          ...(docData.subtitle
-            ? [new Paragraph({
+          ...(() => {
+            const tp: Record<string, string> = project.titlePage ? (() => { try { return JSON.parse(project.titlePage); } catch { return {}; } })() : {};
+            const elements: Paragraph[] = [];
+            // Vertical centering spacer
+            elements.push(new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }));
+            elements.push(new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }));
+            elements.push(new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }));
+            // Title — bold, centered
+            elements.push(new Paragraph({
+              children: [new TextRun({ text: docData.title, bold: true, ...baseRun })],
+              alignment: AlignmentType.CENTER,
+              spacing: { line: APA_LINE_SPACING },
+            }));
+            if (docData.subtitle) {
+              elements.push(new Paragraph({
                 text: docData.subtitle,
                 alignment: AlignmentType.CENTER,
                 spacing: { line: APA_LINE_SPACING },
-              })]
-            : []),
-          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
-          // Author placeholder
-          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
-          new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }),
+              }));
+            }
+            elements.push(new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }));
+            if (tp.authorName) elements.push(new Paragraph({ text: tp.authorName, alignment: AlignmentType.CENTER, spacing: { line: APA_LINE_SPACING } }));
+            if (tp.institution) elements.push(new Paragraph({ text: tp.institution, alignment: AlignmentType.CENTER, spacing: { line: APA_LINE_SPACING } }));
+            if (tp.course) elements.push(new Paragraph({ text: tp.course, alignment: AlignmentType.CENTER, spacing: { line: APA_LINE_SPACING } }));
+            if (tp.instructor) elements.push(new Paragraph({ text: tp.instructor, alignment: AlignmentType.CENTER, spacing: { line: APA_LINE_SPACING } }));
+            if (tp.date) elements.push(new Paragraph({ text: tp.date, alignment: AlignmentType.CENTER, spacing: { line: APA_LINE_SPACING } }));
+            return elements;
+          })(),
 
           // ── Abstract page (if English) / Keywords ──
           ...(project.keywords

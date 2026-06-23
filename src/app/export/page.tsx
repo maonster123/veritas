@@ -112,6 +112,19 @@ export default async function ExportPage({
         <div className="title">{docData.title}</div>
         {docData.subtitle && <div className="subtitle">{docData.subtitle}</div>}
 
+        {(() => {
+          const tp: Record<string, string> = project.titlePage ? (() => { try { return JSON.parse(project.titlePage); } catch { return {}; } })() : {};
+          return (
+            <>
+              {tp.authorName && <p className="no-indent" style={{ textAlign: "center" }}>{tp.authorName}</p>}
+              {tp.institution && <p className="no-indent" style={{ textAlign: "center" }}>{tp.institution}</p>}
+              {tp.course && <p className="no-indent" style={{ textAlign: "center" }}>{tp.course}</p>}
+              {tp.instructor && <p className="no-indent" style={{ textAlign: "center" }}>{tp.instructor}</p>}
+              {tp.date && <p className="no-indent" style={{ textAlign: "center" }}>{tp.date}</p>}
+            </>
+          );
+        })()}
+
         {project.keywords && (
           <p><em>{project.lang === "en" ? "Keywords" : "关键词"}</em>: {project.keywords}</p>
         )}
