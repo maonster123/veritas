@@ -234,10 +234,9 @@ export function formatReferenceEntry(
     url: ref.url ?? "",
   };
 
-  // Strip trailing periods from authors to avoid double-period with template
-  if (vars.authors.endsWith(".")) {
-    vars.authors = vars.authors.replace(/\.+$/, "");
-  }
+  // Strip trailing periods to avoid double-period with template
+  vars.authors = vars.authors.replace(/\.+$/, "");
+  vars.journal = vars.journal.replace(/\.+$/, "");
 
   let result = fillTemplate(tmpl, vars);
 
