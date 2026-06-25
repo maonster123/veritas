@@ -429,26 +429,50 @@ export async function generateKeywords(
     });
     if (!project || project.userId !== session.user.id) return { success: false, error: "无权操作" };
 
-    // Get chapter titles for context
-    const chapters = await prisma.outlineNode.findMany({
-      where: { projectId, type: "chapter" },
-      select: { title: true },
+    // Load all node content for full-text keyword extraction
+    const allNodes = await prisma.outlineNode.findMany({
+      where: { projectId },
+      select: { title: true, type: true, content: true, notes: true },
       orderBy: { sortOrder: "asc" },
     });
 
-    const chapterTitles = chapters.map(c => c.title).join(", ");
+    // Build full text summary: title + section headings + content
+    const fullText = allNodes.map(n => {
+      const parts = [`[${n.type}] ${n.title}`];
+      if (n.content) parts.push(n.content.slice(0, 500));
+      return parts.join("\n");
+    }).join("\n\n");
+
+    // Count total chars and scale keyword count
+    const totalChars = fullText.length;
+    const keywordCount = totalChars < 1000 ? 4 : totalChars < 3000 ? 6 : totalChars < 8000 ? 8 : 12;
+
     const isEn = project.lang === "en";
 
     const systemPrompt = isEn
-      ? `Extract 3-5 keywords from the thesis title and chapter titles. Return ONLY the keywords, separated by commas. No explanations.`
-      : `从论文标题和章节标题中提取 3-5 个关键词。只返回用逗号分隔的关键词，不要解释。`;
+      ? `You are an academic keyword extraction specialist. Analyze the full text of this thesis and extract ${keywordCount} precise, non-redundant keywords.
+
+CRITICAL RULES:
+1. Extract exactly ${keywordCount} keywords.
+2. NO synonyms or near-duplicates: pick the most precise term for each concept. "cognitive behavioral therapy" and "CBT" are the same — pick one. "emotion regulation" and "emotional regulation" are the same — pick one.
+3. Keywords must be specific academic terms, not generic words like "research", "study", "analysis".
+4. Cover the full scope: methodology terms, theoretical frameworks, key variables, population, and domain-specific concepts.
+5. Return ONLY the keywords separated by commas. No numbering, no explanations.`
+      : `你是学术关键词提取专家。分析这篇论文的全文，提取 ${keywordCount} 个精准且无重复的关键词。
+
+严格规则：
+1. 精确提取 ${keywordCount} 个关键词。
+2. 严禁同义词或近义词重复：每个概念只选最精确的一个词。"认知行为疗法"和"CBT"是一回事——只选一个。"情绪调节"和"情感调节"是一回事——只选一个。
+3. 关键词必须是具体学术术语，不能是"研究""分析""实验"等泛词。
+4. 覆盖全文范围：方法论术语、理论框架、关键变量、研究对象、领域特有概念。
+5. 只返回逗号分隔的关键词。不要编号，不要解释。`;
 
     const userPrompt = isEn
-      ? `Thesis: "${project.title}". Chapters: ${chapterTitles}. Extract 3-5 academic keywords.`
-      : `论文标题：「${project.title}」。章节标题：${chapterTitles}。提取 3-5 个学术关键词。`;
+      ? `Thesis: "${project.title}".\n\nFull content summary:\n${fullText.slice(0, 6000)}\n\nExtract ${keywordCount} precise, non-redundant academic keywords.`
+      : `论文标题：「${project.title}」。\n\n全文内容摘要：\n${fullText.slice(0, 6000)}\n\n提取 ${keywordCount} 个精准且无重复的学术关键词。`;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), 30000);
 
     const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
       method: "POST",
@@ -463,7 +487,7 @@ export async function generateKeywords(
           { role: "user", content: userPrompt },
         ],
         temperature: 0.3,
-        max_tokens: 128,
+        max_tokens: 256,
       }),
       signal: controller.signal,
     }).finally(() => clearTimeout(timeout));
