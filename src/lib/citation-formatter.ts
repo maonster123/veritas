@@ -230,6 +230,11 @@ export function formatReferenceEntry(
     url: ref.url ?? "",
   };
 
+  // Strip trailing periods from authors to avoid double-period with template
+  if (vars.authors.endsWith(".")) {
+    vars.authors = vars.authors.replace(/\.+$/, "");
+  }
+
   let result = fillTemplate(tmpl, vars);
 
   // Append DOI for MLA 9th and IEEE
