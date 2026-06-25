@@ -69,10 +69,9 @@ export async function GET(request: NextRequest) {
 <style>
 @page { size: A4; margin: 25.4mm; }
 body { font-family: "Times New Roman", serif; font-size: 12pt; line-height: 2; color: #000; margin: 0; }
-h1 { font-size: 12pt; font-weight: bold; text-align: center; margin: 14pt 0 6pt 0; }
-h2 { font-size: 12pt; font-weight: bold; text-align: left; margin: 14pt 0 6pt 0; }
-h3 { font-size: 12pt; font-weight: bold; font-style: italic; text-align: left; margin: 12pt 0 6pt 0; }
-h4 { font-size: 12pt; font-weight: bold; margin: 10pt 0 4pt 0; }
+h1, h2, h3, h4 { font-size: 12pt; text-align: center; margin: 14pt 0 6pt 0; }
+h1, h2 { font-weight: bold; }
+h3, h4 { font-weight: bold; font-style: italic; }
 p { text-indent: 12.7mm; margin: 0; }
 .tp-field { text-align: center; text-indent: 0; }
 .title { font-size: 12pt; font-weight: bold; text-align: center; text-indent: 0; margin: 60pt 0 6pt 0; }

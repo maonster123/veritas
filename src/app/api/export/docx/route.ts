@@ -189,14 +189,11 @@ function renderSection(section: any): Paragraph[] {
   const result: Paragraph[] = [];
   const level = section.level;
 
-  // APA heading styles by level
-  const headingStyle = level === 1
-    ? { alignment: AlignmentType.CENTER as typeof AlignmentType.CENTER, spacing: { line: LINE_SPACING, before: 200, after: 100, lineRule: "auto" as const } }
-    : level === 2
-    ? { spacing: { line: LINE_SPACING, before: 200, after: 100, lineRule: "auto" as const } }
-    : level === 3
-    ? { spacing: { line: LINE_SPACING, before: 200, after: 100, lineRule: "auto" as const } }
-    : { spacing: lineSpacing() };
+  // All headings centered
+  const headingStyle = {
+    alignment: AlignmentType.CENTER as typeof AlignmentType.CENTER,
+    spacing: { line: LINE_SPACING, before: 200, after: 100, lineRule: "auto" as const },
+  };
 
   const headingRun = level === 1 ? bold : level === 3 ? boldItalic : bold;
 
@@ -221,10 +218,9 @@ function renderSegment(seg: any): Paragraph[] {
     case "heading": {
       const level = Math.min((seg.level ?? 1) + 1, 4);
       const hRun = level <= 2 ? bold : boldItalic;
-      const hAlign = level <= 1 ? AlignmentType.CENTER : undefined;
       return [new Paragraph({
         children: [new TextRun({ text: seg.content?.map((i: ParsedInline) => i.text).join("") ?? "", ...hRun })],
-        alignment: hAlign,
+        alignment: AlignmentType.CENTER,
         spacing: { line: LINE_SPACING, before: 200, after: 100, lineRule: "auto" as const },
       })];
     }
