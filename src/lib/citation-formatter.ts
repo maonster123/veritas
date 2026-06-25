@@ -78,10 +78,12 @@ function formatAuthorsNLM(authors: AuthorEntry[]): string {
   const sorted = [...authors].sort((a, b) => a.order - b.order);
   return sorted
     .map((a) => {
+      // Organizational author (no given name)
+      if (!a.given.trim()) return a.family;
       const initials = a.given
         .split(/\s+/)
         .map((w) => (w[0] ?? "").toUpperCase())
-        .join(" ");
+        .join(""); // NLM: no spaces between initials
       return `${a.family} ${initials}`;
     })
     .join(", ");
@@ -212,8 +214,9 @@ export function formatReferenceEntry(
   const isMLA = style.formatType === "author_page";
   const isIEEE = style.name === "IEEE";
   const displayTitle = (isMLA || isIEEE) ? toTitleCase(ref.title) : ref.title;
-  // IEEE: abbreviate journal name
-  const displayJournal = isIEEE ? abbreviateJournal(ref.journal ?? "") : (ref.journal ?? "");
+  // IEEE & NLM: abbreviate journal name
+  const isNLM = style.name === "NLM";
+  const displayJournal = (isIEEE || isNLM) ? abbreviateJournal(ref.journal ?? "") : (ref.journal ?? "");
 
   const vars: Record<string, string> = {
     authors: authorsStr,
@@ -225,6 +228,7 @@ export function formatReferenceEntry(
     year: ref.year?.toString() ?? "",
     publisher: ref.publisher ?? "",
     address: "",
+    month: "",
     index: index.toString(),
     doi: ref.doi ?? "",
     url: ref.url ?? "",
