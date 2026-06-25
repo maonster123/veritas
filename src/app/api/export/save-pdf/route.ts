@@ -120,7 +120,7 @@ ${refsHtml}
 function renderSectionHtml(section: any): string {
   let r = "";
   const lvl = Math.min(section.level, 4);
-  r += `<h${lvl}>${section.title}</h${lvl}>\n`;
+  r += `<h${lvl}>${titleCase(section.title)}</h${lvl}>\n`;
   for (const seg of section.segments) {
     switch (seg.type) {
       case "heading": {

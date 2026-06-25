@@ -201,7 +201,7 @@ function renderSection(section: any): Paragraph[] {
   const headingRun = level === 1 ? bold : level === 3 ? boldItalic : bold;
 
   result.push(new Paragraph({
-    children: [new TextRun({ text: section.title, ...headingRun })],
+    children: [new TextRun({ text: titleCase(section.title), ...headingRun })],
     ...headingStyle,
   }));
 

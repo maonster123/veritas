@@ -172,7 +172,7 @@ function renderSection(section: any): React.ReactNode {
   const sectionLevel = Math.min(section.level, 4);
   return (
     <div key={section.nodeId}>
-      {React.createElement(`h${sectionLevel}`, null, section.title)}
+      {React.createElement(`h${sectionLevel}`, null, titleCase(section.title))}
       {section.segments.map((seg: any, i: number) => {
         switch (seg.type) {
           case "heading": {
