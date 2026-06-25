@@ -7,6 +7,20 @@ import { buildDocument, type FormatConfig, type CitationConfig } from "@/lib/doc
 import { writeFileSync } from "fs";
 import { join } from "path";
 
+const MINOR_WORDS = new Set(["a", "an", "the", "and", "but", "or", "nor", "for", "so", "yet",
+  "at", "by", "in", "of", "on", "to", "up", "as", "is", "it", "be", "am", "are", "was", "were", "been",
+  "from", "with", "into", "onto", "upon", "within", "without", "than", "that"]);
+
+function titleCase(text: string): string {
+  const words = text.split(/\s+/);
+  if (words.length === 0) return text;
+  return words.map((w, i) => {
+    if (i === 0 || i === words.length - 1) return w.charAt(0).toUpperCase() + w.slice(1);
+    if (MINOR_WORDS.has(w.toLowerCase())) return w;
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(" ");
+}
+
 export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -77,7 +91,7 @@ export async function GET(request: NextRequest) {
     ? `<p style="text-indent:12.7mm;margin-top:12pt;"><em>${project.lang === "en" ? "Keywords" : "关键词"}</em>: ${project.keywords}</p>`
     : "";
   const refsHtml = docData.references.length > 0
-    ? `<h2>${project.lang === "en" ? "References" : "参考文献"}</h2>\n${docData.references.map(r => `<p class="ref-entry">${r.text}</p>`).join("\n")}`
+    ? `<div style="page-break-before:always;"></div><h2 style="text-align:center;">${project.lang === "en" ? "References" : "参考文献"}</h2>\n${docData.references.map(r => `<p class="ref-entry">${r.text}</p>`).join("\n")}`
     : "";
 
   const html = `<!DOCTYPE html>
@@ -95,11 +109,12 @@ ul { text-indent: 12.7mm; margin: 0; padding-left: 24mm; }
 ul li { list-style-type: disc; }
 .title { font-size: 12pt; font-weight: bold; text-align: center; text-indent: 0; margin: 60pt 0 12pt 0; }
 .subtitle { font-size: 12pt; text-align: center; text-indent: 0; margin: 0 0 24pt 0; }
+.ref-section h2 { text-align: center; margin: 18pt 0 12pt 0; }
 .ref-entry { padding-left: 12.7mm; text-indent: -12.7mm; margin: 0; }
 </style></head>
 <body>
-<div class="title">${docData.title}</div>
-${docData.subtitle ? `<div class="subtitle">${docData.subtitle}</div>` : ""}
+<div class="title">${titleCase(docData.title)}</div>
+${docData.subtitle ? `<div class="subtitle">${titleCase(docData.subtitle)}</div>` : ""}
 ${titlePageHtml}
 <div style="height:24pt;"></div>
 ${keywordsHtml}

@@ -27,6 +27,21 @@ const APA_LINE_SPACING = 480; // double spacing in twips
 const MARGIN = convertMillimetersToTwip(APA_MARGIN_MM);
 const FIRST_INDENT = convertMillimetersToTwip(APA_INDENT_MM);
 
+// APA title case: capitalize first, last, and all major words
+const MINOR_WORDS = new Set(["a", "an", "the", "and", "but", "or", "nor", "for", "so", "yet",
+  "at", "by", "in", "of", "on", "to", "up", "as", "is", "it", "be", "am", "are", "was", "were", "been",
+  "from", "with", "into", "onto", "upon", "within", "without", "than", "that"]);
+
+function titleCase(text: string): string {
+  const words = text.split(/\s+/);
+  if (words.length === 0) return text;
+  return words.map((w, i) => {
+    if (i === 0 || i === words.length - 1) return w.charAt(0).toUpperCase() + w.slice(1);
+    if (MINOR_WORDS.has(w.toLowerCase())) return w;
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(" ");
+}
+
 export async function GET(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -115,13 +130,13 @@ export async function GET(request: NextRequest) {
             elements.push(new Paragraph({ text: "", spacing: { line: APA_LINE_SPACING } }));
             // Title — bold, centered
             elements.push(new Paragraph({
-              children: [new TextRun({ text: docData.title, bold: true, ...baseRun })],
+              children: [new TextRun({ text: titleCase(docData.title), bold: true, ...baseRun })],
               alignment: AlignmentType.CENTER,
               spacing: { line: APA_LINE_SPACING },
             }));
             if (docData.subtitle) {
               elements.push(new Paragraph({
-                text: docData.subtitle,
+                children: [new TextRun({ text: titleCase(docData.subtitle), ...baseRun })],
                 alignment: AlignmentType.CENTER,
                 spacing: { line: APA_LINE_SPACING },
               }));
@@ -151,12 +166,13 @@ export async function GET(request: NextRequest) {
           // ── Body sections ──
           ...renderSections(docData.sections, baseRun),
 
-          // ── References ──
+          // ── References (new page) ──
           new Paragraph({
             children: [new TextRun({ text: isEnglish ? "References" : "参考文献", bold: true, ...baseRun })],
             alignment: AlignmentType.CENTER,
             heading: HeadingLevel.HEADING_1,
             spacing: { line: APA_LINE_SPACING, after: 200 },
+            pageBreakBefore: true,
           }),
           ...docData.references.map(
             (ref) =>

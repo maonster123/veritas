@@ -6,8 +6,20 @@ import { buildTree } from "@/lib/outline-utils";
 import { buildDocument, type FormatConfig, type CitationConfig } from "@/lib/document-builder";
 import type { ParsedInline } from "@/lib/markdown-parser";
 import PrintButton from "@/components/export/PrintButton";
-import { writeFileSync } from "fs";
-import { join } from "path";
+
+const MINOR_WORDS = new Set(["a", "an", "the", "and", "but", "or", "nor", "for", "so", "yet",
+  "at", "by", "in", "of", "on", "to", "up", "as", "is", "it", "be", "am", "are", "was", "were", "been",
+  "from", "with", "into", "onto", "upon", "within", "without", "than", "that"]);
+
+function titleCase(text: string): string {
+  const words = text.split(/\s+/);
+  if (words.length === 0) return text;
+  return words.map((w, i) => {
+    if (i === 0 || i === words.length - 1) return w.charAt(0).toUpperCase() + w.slice(1);
+    if (MINOR_WORDS.has(w.toLowerCase())) return w;
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(" ");
+}
 
 export default async function ExportPage({
   searchParams,
@@ -109,8 +121,8 @@ export default async function ExportPage({
       <body>
         <PrintButton />
 
-        <div className="title">{docData.title}</div>
-        {docData.subtitle && <div className="subtitle">{docData.subtitle}</div>}
+        <div className="title">{titleCase(docData.title)}</div>
+        {docData.subtitle && <div className="subtitle">{titleCase(docData.subtitle)}</div>}
 
         {(() => {
           const tp: Record<string, string> = project.titlePage ? (() => { try { return JSON.parse(project.titlePage); } catch { return {}; } })() : {};
@@ -132,8 +144,8 @@ export default async function ExportPage({
         {docData.sections.map((section) => renderSection(section))}
 
         {docData.references.length > 0 && (
-          <div style={{ marginTop: "24pt" }}>
-            <h2>参考文献</h2>
+          <div style={{ marginTop: "24pt", pageBreakBefore: "always" }}>
+            <h2 style={{ textAlign: "center" }}>{project.lang === "en" ? "References" : "参考文献"}</h2>
             {docData.references.map((ref) => (
               <p key={ref.id} className="ref-entry">{ref.text}</p>
             ))}
