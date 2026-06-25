@@ -85,26 +85,25 @@ export default function ExportDialog({ projectId, title, keywords, titlePage, is
           {/* Keywords */}
           <div>
             <label className="block text-xs font-medium text-zinc-600 dark:text-zinc-400 mb-1">{labels.kwLabel}</label>
-            <div className="flex gap-2">
-              <input
-                value={kw}
-                onChange={e => setKw(e.target.value)}
-                placeholder={labels.kwPlaceholder}
-                className="flex-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
-              <button
-                onClick={async () => {
-                  setLoadingKw(true);
-                  const r = await generateKeywords(projectId);
-                  if (r.success && r.keywords) setKw(r.keywords);
-                  setLoadingKw(false);
-                }}
-                disabled={loadingKw}
-                className="shrink-0 text-xs px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
-              >
-                {loadingKw ? "..." : "AI 识别"}
-              </button>
-            </div>
+            <textarea
+              value={kw}
+              onChange={e => setKw(e.target.value)}
+              placeholder={labels.kwPlaceholder}
+              rows={3}
+              className="w-full text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+            />
+            <button
+              onClick={async () => {
+                setLoadingKw(true);
+                const r = await generateKeywords(projectId);
+                if (r.success && r.keywords) setKw(r.keywords);
+                setLoadingKw(false);
+              }}
+              disabled={loadingKw}
+              className="mt-2 text-xs px-3 py-1.5 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
+            >
+              {loadingKw ? "AI 分析中..." : "AI 识别关键词"}
+            </button>
           </div>
         </div>
 
