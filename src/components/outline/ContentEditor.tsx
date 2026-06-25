@@ -423,12 +423,12 @@ function NormTab({ node, hasApiKey, lang }: { node: FlatNode; hasApiKey: boolean
   const [copied, setCopied] = useState(false);
 
   const formatName = lang === "en"
-    ? { "c-gb7714": "GB/T 7714", "c-apa7": "APA 7th", "c-mla9": "MLA 9th", "c-ieee": "IEEE" }
-    : { "c-gb7714": "GB/T 7714", "c-apa7": "APA 7th", "c-mla9": "MLA 9th", "c-ieee": "IEEE" };
+    ? { "c-gb7714": "GB/T 7714", "c-apa7": "APA 7th", "c-mla9": "MLA 9th", "c-ieee": "IEEE", "c-nlm": "NLM" }
+    : { "c-gb7714": "GB/T 7714", "c-apa7": "APA 7th", "c-mla9": "MLA 9th", "c-ieee": "IEEE", "c-nlm": "NLM" };
 
   // Key simplified for user display
   const formatLabels: Record<string, string> = {
-    "GB/T 7714": "GB/T 7714", "APA 7th": "APA 7th", "MLA 9th": "MLA 9th", "IEEE": "IEEE",
+    "GB/T 7714": "GB/T 7714", "APA 7th": "APA 7th", "MLA 9th": "MLA 9th", "IEEE": "IEEE", "NLM": "NLM",
     GB: "GB/T 7714", APA: "APA 7th", MLA: "MLA 9th",
   };
 
@@ -461,7 +461,7 @@ function NormTab({ node, hasApiKey, lang }: { node: FlatNode; hasApiKey: boolean
         >
           {(lang === "zh"
             ? ["GB/T 7714", "APA 7th"]
-            : ["APA 7th", "MLA 9th", "IEEE"]
+            : ["APA 7th", "MLA 9th", "IEEE", "NLM"]
           ).map(f => (
             <option key={f} value={f}>{f}</option>
           ))}

@@ -70,6 +70,7 @@ const PROFILES: Record<string, FormatProfile> = {
     headingsCentered: true, headingsBold: true, refsNewPage: false,
     labelStyle: "IEEE",
   },
+  "NLM": { font: "Times New Roman", eastAsiaFont: "Times New Roman", headingFont: "Times New Roman", sizePt: 12, sizeHalfPts: 24, lineSpacing: 480, marginMm: { top: 25.4, bottom: 25.4, left: 25.4, right: 25.4 }, indentFirstMm: 12.7, titlePageSpacer: 2, titleBold: true, titleSizeHalfPts: 24, headingsCentered: true, headingsBold: true, refsNewPage: true, labelStyle: "NLM" },
   "GB/T 7714": {
     font: "SimSun", eastAsiaFont: "SimSun", headingFont: "SimHei",
     sizePt: 12, sizeHalfPts: 24, lineSpacing: 360,
@@ -136,7 +137,7 @@ export async function GET(request: NextRequest) {
   const titleRun = { font: pf.headingFont, size: pf.titleSizeHalfPts, eastAsia: pf.eastAsiaFont };
 
   const refLabel = isEnglish
-    ? { APA: "References", MLA: "Works Cited", IEEE: "References" }[citationName] ?? "References"
+    ? (citationName === "MLA 9th" ? "Works Cited" : "References")
     : "参考文献";
 
   const children: Paragraph[] = [];

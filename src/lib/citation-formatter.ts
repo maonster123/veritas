@@ -73,6 +73,20 @@ function formatAuthorsMLA(authors: AuthorEntry[]): string {
   return `${first}, et al.`;
 }
 
+function formatAuthorsNLM(authors: AuthorEntry[]): string {
+  if (authors.length === 0) return "";
+  const sorted = [...authors].sort((a, b) => a.order - b.order);
+  return sorted
+    .map((a) => {
+      const initials = a.given
+        .split(/\s+/)
+        .map((w) => (w[0] ?? "").toUpperCase())
+        .join(" ");
+      return `${a.family} ${initials}`;
+    })
+    .join(", ");
+}
+
 function formatAuthorsIEEE(authors: AuthorEntry[]): string {
   if (authors.length === 0) return "";
   const sorted = [...authors].sort((a, b) => a.order - b.order);
@@ -187,6 +201,8 @@ export function formatReferenceEntry(
     default:
       if (style.name.startsWith("IEEE")) {
         authorsStr = formatAuthorsIEEE(authors);
+      } else if (style.name.startsWith("NLM")) {
+        authorsStr = formatAuthorsNLM(authors);
       } else {
         authorsStr = formatAuthorsGB(authors);
       }

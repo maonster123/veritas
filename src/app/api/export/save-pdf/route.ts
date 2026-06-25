@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
   const isMLAMode = citationName === "MLA 9th";
   const hCenter = pf.centerHeadings ? "text-align:center;" : "text-align:left;";
   const refLabel = isEnglish
-    ? { APA: "References", MLA: "Works Cited", IEEE: "References" }[citationName] ?? "References"
+    ? (citationName === "MLA 9th" ? "Works Cited" : "References")
     : "参考文献";
 
   const titleFields = isMLAMode

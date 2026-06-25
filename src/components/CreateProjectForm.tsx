@@ -11,6 +11,7 @@ const FORMATS: Record<string, { id: string; name: string; desc: string }[]> = {
     { id: "c-apa7", name: "APA 7th", desc: "美国心理学会格式，社科论文首选" },
     { id: "c-mla9", name: "MLA 9th", desc: "现代语言协会格式，人文学科常用" },
     { id: "c-ieee", name: "IEEE", desc: "电气电子工程师学会格式，理工科常用" },
+    { id: "c-nlm", name: "NLM", desc: "美国国家医学图书馆格式，生物医学常用" },
   ],
 };
 
