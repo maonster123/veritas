@@ -234,9 +234,13 @@ export function formatReferenceEntry(
     url: ref.url ?? "",
   };
 
-  // Strip trailing periods to avoid double-period with template
-  vars.authors = vars.authors.replace(/\.+$/, "");
-  vars.journal = vars.journal.replace(/\.+$/, "");
+  // Strip trailing periods only when template adds a period right after
+  if (tmpl.includes("{authors}.")) {
+    vars.authors = vars.authors.replace(/\.+$/, "");
+  }
+  if (tmpl.includes("{journal}.")) {
+    vars.journal = vars.journal.replace(/\.+$/, "");
+  }
 
   let result = fillTemplate(tmpl, vars);
 
