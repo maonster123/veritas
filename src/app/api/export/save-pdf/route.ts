@@ -59,8 +59,11 @@ export async function GET(request: NextRequest) {
 
   const sectionsHtml = docData.sections.map(renderSectionHtml).join("\n");
 
-  const refsHtml = docData.references.length > 0
-    ? `<div style="page-break-before:always;"></div><h2 class="ref-heading">${project.lang === "en" ? "References" : "参考文献"}</h2>\n${docData.references.map(r => `<p class="ref-entry">${r.text}</p>`).join("\n")}`
+  const sortedRefs = [...docData.references].sort((a, b) =>
+    a.text.localeCompare(b.text, "en", { sensitivity: "base" })
+  );
+  const refsHtml = sortedRefs.length > 0
+    ? `<div style="page-break-before:always;"></div><h2 class="ref-heading">${project.lang === "en" ? "References" : "参考文献"}</h2>\n${sortedRefs.map(r => `<p class="ref-entry">${r.text}</p>`).join("\n")}`
     : "";
 
   const html = `<!DOCTYPE html>

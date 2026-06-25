@@ -145,7 +145,12 @@ export async function GET(request: NextRequest) {
     pageBreakBefore: true,
   }));
 
-  for (const ref of docData.references) {
+  // Sort references alphabetically by first author surname
+  const sortedRefs = [...docData.references].sort((a, b) =>
+    a.text.localeCompare(b.text, "en", { sensitivity: "base" })
+  );
+
+  for (const ref of sortedRefs) {
     children.push(new Paragraph({
       text: ref.text,
       spacing: lineSpacing(),
