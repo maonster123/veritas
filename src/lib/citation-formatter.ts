@@ -153,6 +153,16 @@ const MLA_LOWERCASE = new Set([
   "from", "with", "into", "onto", "upon", "within", "without",
 ]);
 
+function toSentenceCase(title: string): string {
+  // Capitalize first word and first word after colon, lowercase rest
+  return title.replace(/[^:]+/g, (part, offset) => {
+    const trimmed = part.trimStart();
+    const leadingSpace = part.slice(0, part.length - trimmed.length);
+    const first = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+    return offset === 0 ? first : leadingSpace + first;
+  });
+}
+
 function toTitleCase(title: string): string {
   const words = title.split(/\s+/);
   if (words.length === 0) return title;
@@ -210,10 +220,11 @@ export function formatReferenceEntry(
       }
   }
 
-  // MLA & IEEE: use title case
+  // Title formatting per style
   const isMLA = style.formatType === "author_page";
   const isIEEE = style.name === "IEEE";
-  const displayTitle = (isMLA || isIEEE) ? toTitleCase(ref.title) : ref.title;
+  const isAPA = style.formatType === "author_year";
+  const displayTitle = isMLA || isIEEE ? toTitleCase(ref.title) : isAPA ? toSentenceCase(ref.title) : ref.title;
   // IEEE & NLM: abbreviate journal name
   const isNLM = style.name === "NLM";
   const displayJournal = (isIEEE || isNLM) ? abbreviateJournal(ref.journal ?? "") : (ref.journal ?? "");
