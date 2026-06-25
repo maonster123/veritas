@@ -456,16 +456,18 @@ CRITICAL RULES:
 1. Extract exactly ${keywordCount} keywords.
 2. NO synonyms or near-duplicates: pick the most precise term for each concept. "cognitive behavioral therapy" and "CBT" are the same — pick one. "emotion regulation" and "emotional regulation" are the same — pick one.
 3. Keywords must be specific academic terms, not generic words like "research", "study", "analysis".
-4. Cover the full scope: methodology terms, theoretical frameworks, key variables, population, and domain-specific concepts.
-5. Return ONLY the keywords separated by commas. No numbering, no explanations.`
+4. ALWAYS include the primary discipline/field as the first keyword (e.g., "psychology", "clinical psychology", "cognitive science").
+5. Cover the full scope: methodology terms, theoretical frameworks, key variables, population, and domain-specific concepts.
+6. Return ONLY the keywords separated by commas. No numbering, no explanations.`
       : `你是学术关键词提取专家。分析这篇论文的全文，提取 ${keywordCount} 个精准且无重复的关键词。
 
 严格规则：
 1. 精确提取 ${keywordCount} 个关键词。
 2. 严禁同义词或近义词重复：每个概念只选最精确的一个词。"认知行为疗法"和"CBT"是一回事——只选一个。"情绪调节"和"情感调节"是一回事——只选一个。
 3. 关键词必须是具体学术术语，不能是"研究""分析""实验"等泛词。
-4. 覆盖全文范围：方法论术语、理论框架、关键变量、研究对象、领域特有概念。
-5. 只返回逗号分隔的关键词。不要编号，不要解释。`;
+4. 第一个关键词必须是学科领域名（如"心理学""临床心理学""认知科学"）。
+5. 覆盖全文范围：方法论术语、理论框架、关键变量、研究对象、领域特有概念。
+6. 只返回逗号分隔的关键词。不要编号，不要解释。`;
 
     const userPrompt = isEn
       ? `Thesis: "${project.title}".\n\nFull content summary:\n${fullText.slice(0, 6000)}\n\nExtract ${keywordCount} precise, non-redundant academic keywords.`
