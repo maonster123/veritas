@@ -142,17 +142,30 @@ export async function GET(request: NextRequest) {
 
   const children: Paragraph[] = [];
 
-  // ═══ TITLE PAGE ═══
-  if (pf.titlePageSpacer > 0) {
+  // ═══ MLA: header block at top, left-aligned ═══
+  if (citationName === "MLA 9th") {
+    const mlaFields = [tp.authorName, tp.instructor, tp.course, tp.date].filter(Boolean);
+    for (const f of mlaFields) {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: f!, ...bodyRun })],
+        spacing: { line: pf.lineSpacing, lineRule: "auto" as const },
+      }));
+    }
+    // Blank line before title
+    children.push(new Paragraph({ spacing: { line: pf.lineSpacing, lineRule: "auto" as const } }));
+  }
+
+  // ═══ TITLE PAGE (non-MLA) ═══
+  if (citationName !== "MLA 9th" && pf.titlePageSpacer > 0) {
     for (let i = 0; i < pf.titlePageSpacer; i++) {
       children.push(new Paragraph({ spacing: { line: pf.lineSpacing, lineRule: "auto" as const } }));
     }
   }
 
-  // Title
+  // Title — centered (MLA: not bold; others: per profile)
   children.push(new Paragraph({
     children: [new TextRun({ text: isEnglish ? titleCase(docData.title) : docData.title, bold: pf.titleBold, ...titleRun })],
-    alignment: AlignmentType.CENTER,
+    alignment: citationName === "MLA 9th" ? AlignmentType.CENTER : AlignmentType.CENTER,
     spacing: { line: pf.lineSpacing, lineRule: "auto" as const },
   }));
 
@@ -165,7 +178,7 @@ export async function GET(request: NextRequest) {
     }));
   }
 
-  // Title page info fields (except MLA)
+  // Title page info (non-MLA: centered author/institution/etc)
   if (citationName !== "MLA 9th") {
     children.push(new Paragraph({ spacing: { line: pf.lineSpacing, lineRule: "auto" as const } }));
     const fields = [tp.authorName, tp.institution, tp.course, tp.instructor, tp.date].filter(Boolean);
@@ -173,17 +186,6 @@ export async function GET(request: NextRequest) {
       children.push(new Paragraph({
         children: [new TextRun({ text: f!, ...bodyRun })],
         alignment: AlignmentType.CENTER,
-        spacing: { line: pf.lineSpacing, lineRule: "auto" as const },
-      }));
-    }
-  }
-
-  // MLA: header block on first page (left-aligned)
-  if (citationName === "MLA 9th") {
-    const mlaFields = [tp.authorName, tp.instructor, tp.course, tp.date].filter(Boolean);
-    for (const f of mlaFields) {
-      children.push(new Paragraph({
-        children: [new TextRun({ text: f!, ...bodyRun })],
         spacing: { line: pf.lineSpacing, lineRule: "auto" as const },
       }));
     }
@@ -216,8 +218,8 @@ export async function GET(request: NextRequest) {
 
   if (sortedRefs.length > 0) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: refLabel, bold: true, ...headingRun })],
-      alignment: pf.headingsCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
+      children: [new TextRun({ text: refLabel, bold: citationName !== "MLA 9th", ...headingRun })],
+      alignment: AlignmentType.CENTER,
       spacing: { line: pf.lineSpacing, lineRule: "auto" as const, after: 200 },
       pageBreakBefore: pf.refsNewPage ? true : undefined,
     }));
