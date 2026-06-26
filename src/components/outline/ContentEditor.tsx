@@ -289,6 +289,30 @@ function parseRefAuthors(authorsJson: string): string {
   } catch { return ""; }
 }
 
+// Generate APA in-text citation per doc 112 rules
+function inTextCitation(authorsJson: string, year: number | null): string {
+  try {
+    const arr = JSON.parse(authorsJson) as { family: string; given: string }[];
+    const yr = year?.toString() ?? "n.d.";
+    if (arr.length === 0) return `(n.d.)`;
+    if (arr.length === 1) return `(${arr[0].family}, ${yr})`;
+    if (arr.length === 2) return `(${arr[0].family} & ${arr[1].family}, ${yr})`;
+    return `(${arr[0].family} et al., ${yr})`;
+  } catch { return "(n.d.)"; }
+}
+
+// Narrative form: Author (Year)
+function narrativeCitation(authorsJson: string, year: number | null): string {
+  try {
+    const arr = JSON.parse(authorsJson) as { family: string; given: string }[];
+    const yr = year?.toString() ?? "n.d.";
+    if (arr.length === 0) return `(n.d.)`;
+    if (arr.length === 1) return `${arr[0].family} (${yr})`;
+    if (arr.length === 2) return `${arr[0].family} and ${arr[1].family} (${yr})`;
+    return `${arr[0].family} et al. (${yr})`;
+  } catch { return "n.d."; }
+}
+
 function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }) {
   const refs = node.outlineReferences ?? [];
   const [collapsed, setCollapsed] = useState(true);
@@ -352,13 +376,18 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
                 return (
                   <div key={or.id} className="flex items-start gap-2 group py-1">
                     <span className="text-[10px] text-zinc-400 mt-0.5 shrink-0">[{i + 1}]</span>
-                    <p className="flex-1 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed min-w-0">
-                      {authors ? `${authors} ` : ""}({year}). {r.title}
-                      {r.journal ? `. ${r.journal}` : ""}
-                      {r.volume ? `, ${r.volume}` : ""}
-                      {r.issue ? `(${r.issue})` : ""}
-                      {r.pages ? `, ${r.pages}` : ""}.
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        {authors ? `${authors} ` : ""}({year}). {r.title}
+                        {r.journal ? `. ${r.journal}` : ""}
+                        {r.volume ? `, ${r.volume}` : ""}
+                        {r.issue ? `(${r.issue})` : ""}
+                        {r.pages ? `, ${r.pages}` : ""}.
+                      </p>
+                      <p className="text-[10px] text-blue-500 dark:text-blue-400 mt-0.5">
+                        文内引用：{inTextCitation(r.authors, r.year)}
+                      </p>
+                    </div>
                     <button
                       onClick={async () => {
                         await unlinkReference(or.id);
