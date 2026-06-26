@@ -237,7 +237,7 @@ function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean 
       </div>
       {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
       {resources.length > 0 && (
-        <div className="flex-1 overflow-y-auto space-y-2">
+        <div className="flex-1 space-y-2">
           {resources.map((r, i) => (
             <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-emerald-400 transition-colors group">
               <div className="flex items-start justify-between gap-2">
