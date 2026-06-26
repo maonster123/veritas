@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, Suspense, lazy } from "react";
+import { useState, Suspense } from "react";
 import { loginUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
-const Spline = lazy(() => import("@splinetool/react-spline/next"));
+const Spline = dynamic(() => import("@splinetool/react-spline/next"), { ssr: false });
 
 export default function LoginPage() {
   const router = useRouter();

@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, lazy } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 
-const Spline = lazy(() => import("@splinetool/react-spline/next"));
+const Spline = dynamic(() => import("@splinetool/react-spline/next"), { ssr: false });
 
 export default function LandingPage() {
   return (
