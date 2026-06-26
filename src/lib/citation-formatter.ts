@@ -289,7 +289,7 @@ export function formatReferenceEntry(
 
   // Append DOI for MLA 9th and IEEE
   if ((isMLA || isIEEE) && ref.doi) {
-    result = result.replace(/[,;]+$/, "").trimEnd();
+    result = result.replace(/[,;.]+$/, "").trimEnd();
     result += `. doi:${ref.doi}.`;
   }
 
