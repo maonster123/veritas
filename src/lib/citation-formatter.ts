@@ -137,6 +137,10 @@ const IEEE_JOURNAL_ABBRS: Record<string, string> = {
   "Nature": "Nature",
   "Proceedings of the National Academy of Sciences": "Proc. Natl. Acad. Sci.",
   "PLOS ONE": "PLOS ONE",
+  "Frontiers in Public Health": "Front. Public Health",
+  "Frontiers in Psychology": "Front. Psychol.",
+  "Frontiers in Psychiatry": "Front. Psychiatry",
+  "Frontiers in Neuroscience": "Front. Neurosci.",
 };
 
 function abbreviateJournal(name: string): string {
@@ -280,7 +284,10 @@ export function formatReferenceEntry(
     .replace(/,\s+\./g, ".")         // orphan comma-period
     .replace(/, :/g, ",")            // orphan colon
     .replace(/;:/g, ";")             // empty NLM between semicolons
-    .replace(/;\(\):/g, ";")         // empty NLM issue
+    .replace(/;\(\):/g, ";")         // empty NLM issue+pages
+    .replace(/;:/g, ";")             // double semicolon
+    .replace(/:\s*\./g, ".")         // orphan colon (NLM empty pages: "12:." → "12.")
+    .replace(/;\./g, ".")            // orphan semicolon
     .replace(/,\s*,/g, ",")          // double commas → single
     .replace(/\s{2,}/g, " ")         // double spaces → single
     .replace(/,\s+doi:/g, ". doi:")  // comma before doi → period
