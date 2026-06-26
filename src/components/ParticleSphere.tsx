@@ -12,14 +12,17 @@ export default function ParticleSphere() {
   const containerRef = useRef<HTMLDivElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
+  const radiusRef = useRef(200);
   const frameRef = useRef(0);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const COUNT = 150;
-    const RADIUS = 140;
+    const COUNT = 500;
+    const calcRadius = () => Math.min(window.innerWidth, window.innerHeight) * 0.3;
+    radiusRef.current = calcRadius();
+    window.addEventListener("resize", () => { radiusRef.current = calcRadius(); });
     const particles: Particle[] = [];
 
     // Fibonacci sphere distribution for even spacing
@@ -35,12 +38,16 @@ export default function ParticleSphere() {
 
       const el = document.createElement("div");
       el.className = "absolute rounded-full";
-      const size = 1.5 + Math.random() * 3;
-      const opacity = 0.3 + Math.random() * 0.5;
+      const size = 2 + Math.random() * 4;
+      const opacity = 0.35 + Math.random() * 0.5;
       el.style.width = `${size}px`;
       el.style.height = `${size}px`;
-      el.style.background = `rgba(${129 + Math.random() * 60}, ${140 + Math.random() * 30}, ${248 - Math.random() * 30}, ${opacity})`;
-      el.style.boxShadow = `0 0 ${4 + size}px rgba(129,140,248,${opacity})`;
+      // Color range: indigo → cyan → violet
+      const r = 99 + Math.random() * 100;
+      const g = 120 + Math.random() * 80;
+      const b = 220 + Math.random() * 35;
+      el.style.background = `rgba(${r},${g},${b},${opacity})`;
+      el.style.boxShadow = `0 0 ${6 + size}px rgba(${r},${g},${b},${opacity})`;
       container.appendChild(el);
 
       particles.push({ el, x: px, y: py, z: pz, lat: 0, lon: 0 });
@@ -87,9 +94,9 @@ export default function ParticleSphere() {
         const z2 = x * sinMy + z * cosMy;
 
         // Project to screen
-        const scale = 300 / (300 + z2);
-        const sx = cx + x2 * RADIUS * scale;
-        const sy = cy + y * RADIUS * scale;
+        const scale = 400 / (400 + z2);
+        const sx = cx + x2 * radiusRef.current * scale;
+        const sy = cy + y * radiusRef.current * scale;
         const alpha = 0.3 + (z2 + 1) * 0.35;
 
         p.el.style.transform = `translate(${sx}px, ${sy}px)`;
