@@ -272,14 +272,15 @@ export function formatReferenceEntry(
 
   // Universal cleanup — handle all empty-value artifacts across all formats
   result = result
-    .replace(/, vol\. ,/g, "")       // empty volume (MLA/IEEE pattern)
-    .replace(/, no\. ,/g, "")        // empty issue (MLA/IEEE pattern)
-    .replace(/, pp\. \./g, "")       // empty pages (MLA/IEEE pattern)
-    .replace(/\(\)/g, "")            // empty parens (APA pattern: {volume}({issue}) → 61()
+    .replace(/, vol\. ,/g, "")       // empty volume (MLA/IEEE)
+    .replace(/, no\. ,/g, "")        // empty issue (MLA/IEEE)
+    .replace(/, pp\. \./g, "")       // empty pages (MLA/IEEE)
+    .replace(/\(\)/g, "")            // empty parens (APA)
+    .replace(/,\s+\./g, ".")         // orphan comma-period (APA empty pages: "12, ." → "12.")
     .replace(/, :/g, ",")            // orphan colon
-    .replace(/;:/g, ";")             // empty NLM field between semicolons
+    .replace(/;:/g, ";")             // empty NLM between semicolons
     .replace(/;\(\):/g, ";")         // empty NLM issue
-    .replace(/, {2,}/g, ", ")        // double commas → single
+    .replace(/,\s*,/g, ",")          // double commas → single
     .replace(/\s{2,}/g, " ")         // double spaces → single
     .replace(/,\s+doi:/g, ". doi:")  // comma before doi → period
     .replace(/\.{2,}/g, ".")         // double periods → single
