@@ -276,13 +276,23 @@ export function formatReferenceEntry(
     result += ".";
     if (doi) result += ` ${doi}`;
   } else if (style.name === "MLA 9th" || style.formatType === "author_page") {
-    // MLA 9th: Authors. "Title." Journal, vol. Volume, no. Issue, Year, pp. Pages.
-    result = `${vars.authors}. "${vars.title}." ${vars.journal}`;
-    if (V) result += `, vol. ${V}`;
-    if (I) result += `, no. ${I}`;
-    if (Y) result += `, ${Y}`;
-    if (P) result += `, pp. ${P}`;
-    result += ".";
+    // MLA 9th
+    const isBook = !ref.journal;
+    if (isBook) {
+      // Book: Authors. Title. Publisher, Year.
+      result = `${vars.authors}. ${vars.title}.`;
+      if (pub) result += ` ${pub}`;
+      if (Y) result += `, ${Y}`;
+      result += ".";
+    } else {
+      // Article: Authors. "Title." Journal, vol. Volume, no. Issue, Year, pp. Pages.
+      result = `${vars.authors}. "${vars.title}." ${vars.journal}`;
+      if (V) result += `, vol. ${V}`;
+      if (I) result += `, no. ${I}`;
+      if (Y) result += `, ${Y}`;
+      if (P) result += `, pp. ${P}`;
+      result += ".";
+    }
     if (doi) result += ` doi:${ref.doi}.`;
   } else if (style.name === "IEEE") {
     // IEEE: A. Author, "Title," Journal, vol. X, no. X, pp. X, Year.
