@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { createProject } from "@/app/actions/project";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const FORMATS: Record<string, { id: string; name: string; desc: string }[]> = {
   zh: [
-    { id: "c-gb7714", name: "GB/T 7714", desc: "中国国家标准，适用于学位论文、期刊投稿" },
+    { id: "c-gb7714", name: "GB/T 7714", desc: "China national standard for theses and journals" },
   ],
   en: [
-    { id: "c-apa7", name: "APA 7th", desc: "美国心理学会格式，社科论文首选" },
-    { id: "c-mla9", name: "MLA 9th", desc: "现代语言协会格式，人文学科常用" },
-    { id: "c-ieee", name: "IEEE", desc: "电气电子工程师学会格式，理工科常用" },
-    { id: "c-nlm", name: "NLM", desc: "美国国家医学图书馆格式，生物医学常用" },
+    { id: "c-apa7", name: "APA 7th", desc: "Psychology, education, social sciences" },
+    { id: "c-mla9", name: "MLA 9th", desc: "Literature, linguistics, humanities" },
+    { id: "c-ieee", name: "IEEE", desc: "Engineering, computer science, technology" },
+    { id: "c-nlm", name: "NLM", desc: "Biomedical and life sciences" },
   ],
 };
 
@@ -21,106 +22,77 @@ export default function CreateProjectForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handlePickLang = (l: string) => {
-    setLang(l);
-    setStep("format");
-  };
+  const handlePickLang = (l: string) => { setLang(l); setStep("format"); };
 
   const handlePickFormat = async (citationStyleId: string) => {
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     const result = await createProject(lang, citationStyleId);
-    if (result?.error) {
-      setError(result.error);
-      setLoading(false);
-    }
+    if (result?.error) { setError(result.error); setLoading(false); }
   };
 
-  const handleBack = () => {
-    setStep("lang");
-    setError("");
-  };
+  const handleBack = () => { setStep("lang"); setError(""); };
 
-  // ── Step 1: Choose language ──
   if (step === "lang") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="text-center space-y-6 max-w-md">
-          <h1 className="text-xl font-semibold text-zinc-800 dark:text-zinc-200">
-            论文大纲管理系统
-          </h1>
-          <p className="text-zinc-500 text-sm">
-            请选择论文语言
-          </p>
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => handlePickLang("zh")}
-              className="flex-1 max-w-[200px] px-6 py-4 bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all group"
-            >
-              <div className="text-2xl mb-2">📝</div>
-              <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                中文论文
-              </div>
-            </button>
-            <button
-              onClick={() => handlePickLang("en")}
-              className="flex-1 max-w-[200px] px-6 py-4 bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all group"
-            >
-              <div className="text-2xl mb-2">📄</div>
-              <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                English Thesis
-              </div>
-            </button>
+      <div className="min-h-screen flex items-center justify-center relative">
+        <AnimatedBackground />
+        <div className="relative z-10 w-full max-w-lg mx-auto px-6">
+          <div className="glass-card rounded-2xl p-10 space-y-8">
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl font-bold text-white">New Project</h1>
+              <p className="text-sm text-slate-400">Choose your thesis language</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <button onClick={() => handlePickLang("zh")}
+                className="p-6 rounded-xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] hover:border-indigo-500/30 transition-all duration-300 group text-center">
+                <div className="text-3xl mb-3">&#x1F4DD;</div>
+                <div className="text-sm font-semibold text-white group-hover:text-indigo-300">Chinese</div>
+                <div className="text-xs text-slate-500 mt-1">GB/T 7714</div>
+              </button>
+              <button onClick={() => handlePickLang("en")}
+                className="p-6 rounded-xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] hover:border-cyan-500/30 transition-all duration-300 group text-center">
+                <div className="text-3xl mb-3">&#x1F4C4;</div>
+                <div className="text-sm font-semibold text-white group-hover:text-cyan-300">English</div>
+                <div className="text-xs text-slate-500 mt-1">APA · MLA · IEEE · NLM</div>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // ── Step 2: Choose format ──
   const formats = FORMATS[lang] ?? [];
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-      <div className="text-center space-y-6 max-w-md">
-        <h1 className="text-xl font-semibold text-zinc-800 dark:text-zinc-200">
-          论文大纲管理系统
-        </h1>
-        <p className="text-zinc-500 text-sm">
-          {lang === "zh" ? "中文论文" : "English Thesis"} — 请选择引用格式
-        </p>
-        <div className="space-y-3">
-          {formats.map((fmt) => (
-            <button
-              key={fmt.id}
-              onClick={() => handlePickFormat(fmt.id)}
-              disabled={loading}
-              className="w-full px-5 py-4 bg-white dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-all disabled:opacity-50 text-left group"
-            >
-              <div className="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                {fmt.name}
-              </div>
-              <div className="text-xs text-zinc-400 mt-1">
-                {fmt.desc}
-              </div>
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-3 justify-center">
-          <button
-            onClick={handleBack}
-            disabled={loading}
-            className="text-xs text-zinc-500 hover:text-zinc-700 underline"
-          >
-            ← 返回选择语言
+    <div className="min-h-screen flex items-center justify-center relative">
+      <AnimatedBackground />
+      <div className="relative z-10 w-full max-w-lg mx-auto px-6">
+        <div className="glass-card rounded-2xl p-10 space-y-6">
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-bold text-white">Citation Style</h1>
+            <p className="text-sm text-slate-400">{lang === "zh" ? "Chinese thesis" : "English thesis"}</p>
+          </div>
+          <div className="space-y-2">
+            {formats.map((fmt) => (
+              <button key={fmt.id} onClick={() => handlePickFormat(fmt.id)} disabled={loading}
+                className="w-full p-4 rounded-xl border border-white/5 bg-white/[0.03] hover:bg-white/[0.06] hover:border-indigo-500/30 transition-all duration-300 group text-left disabled:opacity-50 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-white group-hover:text-indigo-300">{fmt.name}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{fmt.desc}</div>
+                </div>
+                <svg className="w-4 h-4 text-slate-600 group-hover:text-indigo-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            ))}
+          </div>
+          <button onClick={handleBack} disabled={loading}
+            className="w-full text-xs text-slate-500 hover:text-slate-300 transition-colors py-2">
+            &#x2190; Back to language
           </button>
+          {loading && <p className="text-center text-sm text-slate-400">Creating project...</p>}
+          {error && <p className="text-center text-sm text-red-400">{error}</p>}
         </div>
-        {loading && (
-          <p className="text-sm text-zinc-400">创建中...</p>
-        )}
-        {error && (
-          <p className="text-sm text-red-500">{error}</p>
-        )}
       </div>
     </div>
   );

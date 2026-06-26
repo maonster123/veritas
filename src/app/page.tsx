@@ -2,28 +2,13 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import OutlineApp from "@/components/OutlineApp";
 import CreateProjectForm from "@/components/CreateProjectForm";
-import Link from "next/link";
+import LandingPage from "@/components/LandingPage";
 
 export default async function Home() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-        <div className="text-center space-y-4">
-          <h1 className="text-xl font-semibold text-zinc-800 dark:text-zinc-200">
-            论文大纲管理系统
-          </h1>
-          <p className="text-zinc-500 text-sm">请先登录以继续</p>
-          <Link
-            href="/auth/login"
-            className="inline-block px-6 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
-            前往登录
-          </Link>
-        </div>
-      </div>
-    );
+    return <LandingPage />;
   }
 
   // Find the user's first project

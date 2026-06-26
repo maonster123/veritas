@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { loginUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,59 +21,77 @@ export default function LoginPage() {
       router.push("/");
       router.refresh();
     } else {
-      setError(result.error ?? "登录失败");
+      setError(result.error ?? "Login failed");
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-      <div className="w-full max-w-sm bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-8">
-        <h1 className="text-xl font-semibold text-center mb-6 text-zinc-800 dark:text-zinc-200">
-          登录
-        </h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-              邮箱
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-zinc-600 dark:text-zinc-400 mb-1">
-              密码
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {error && (
-            <p className="text-red-500 text-sm">{error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            {loading ? "登录中..." : "登录"}
-          </button>
-        </form>
-        <p className="text-sm text-zinc-500 text-center mt-4">
-          还没有账号？{" "}
-          <a href="/auth/register" className="text-blue-600 hover:underline">
-            注册
+    <div className="min-h-screen flex items-center justify-center relative">
+      <AnimatedBackground />
+
+      <div className="relative z-10 w-full max-w-md mx-auto px-6">
+        <div className="glass-card rounded-2xl p-8 space-y-6">
+
+          {/* Back link */}
+          <a href="/" className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
           </a>
-        </p>
+
+          <div className="text-center space-y-2">
+            <h1 className="text-xl font-bold text-white">Welcome back</h1>
+            <p className="text-sm text-slate-400">Sign in to continue your research</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@example.com"
+                className="glass-input w-full px-4 py-2.5 rounded-xl text-sm placeholder:text-slate-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wider">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="········"
+                className="glass-input w-full px-4 py-2.5 rounded-xl text-sm placeholder:text-slate-600"
+              />
+            </div>
+            {error && (
+              <p className="text-red-400 text-xs bg-red-500/10 rounded-lg px-3 py-2">{error}</p>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-500 to-cyan-500 text-white rounded-xl text-sm font-semibold hover:from-indigo-400 hover:to-cyan-400 transition-all duration-300 disabled:opacity-50 shadow-lg shadow-indigo-500/25"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+
+          <p className="text-center text-xs text-slate-500">
+            Don&apos;t have an account?{" "}
+            <a href="/auth/register" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+              Register
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
