@@ -20,7 +20,7 @@ export default function LoginForm() {
 
   return (
     <div className="relative z-10 w-full max-w-md mx-auto px-6">
-      <div className="glass-card rounded-2xl p-8 space-y-6">
+      <div className="rounded-2xl p-8 space-y-6" style={{ background: "transparent" }}>
         <a href="/" className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors">
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
           Back

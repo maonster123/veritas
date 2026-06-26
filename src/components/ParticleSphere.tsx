@@ -3,104 +3,182 @@
 import { useEffect, useRef } from "react";
 
 interface Particle {
-  el: HTMLDivElement;
-  x: number; y: number; z: number;
-  lat: number; lon: number;
+  tx: number; ty: number; tz: number; // target position on sphere
+  x: number; y: number; z: number;    // current position (spring)
+  vx: number; vy: number; vz: number; // velocity
+  baseSize: number;
+  hue: number;
+  glow: number;
 }
 
 export default function ParticleSphere() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
-  const mouseRef = useRef({ x: 0, y: 0 });
-  const radiusRef = useRef(200);
+  const mouseRef = useRef({ x: -9999, y: -9999, tx: 0, ty: 0 });
+  const angleRef = useRef({ x: 0, y: 0 });
   const frameRef = useRef(0);
 
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    const COUNT = 500;
-    const calcRadius = () => Math.min(window.innerWidth, window.innerHeight) * 0.3;
-    radiusRef.current = calcRadius();
-    window.addEventListener("resize", () => { radiusRef.current = calcRadius(); });
+    const COUNT = 2500;
+    const RADIUS = Math.min(window.innerWidth, window.innerHeight) * 0.28;
     const particles: Particle[] = [];
+    const SPRING = 0.06;
+    const DAMPING = 0.88;
+    const REPEL_RADIUS = 180;
+    const REPEL_FORCE = 0.12;
 
-    // Fibonacci sphere distribution for even spacing
+    // Fibonacci sphere distribution
     const phi = Math.PI * (3 - Math.sqrt(5));
     for (let i = 0; i < COUNT; i++) {
       const y = 1 - (i / (COUNT - 1)) * 2;
-      const radiusAtY = Math.sqrt(1 - y * y);
+      const r = Math.sqrt(1 - y * y);
       const theta = phi * i;
+      const ix = Math.cos(theta) * r;
+      const iz = Math.sin(theta) * r;
 
-      const px = Math.cos(theta) * radiusAtY;
-      const py = y;
-      const pz = Math.sin(theta) * radiusAtY;
-
-      const el = document.createElement("div");
-      el.className = "absolute rounded-full";
-      const size = 2 + Math.random() * 4;
-      const opacity = 0.35 + Math.random() * 0.5;
-      el.style.width = `${size}px`;
-      el.style.height = `${size}px`;
-      // Color range: indigo → cyan → violet
-      const r = 99 + Math.random() * 100;
-      const g = 120 + Math.random() * 80;
-      const b = 220 + Math.random() * 35;
-      el.style.background = `rgba(${r},${g},${b},${opacity})`;
-      el.style.boxShadow = `0 0 ${6 + size}px rgba(${r},${g},${b},${opacity})`;
-      container.appendChild(el);
-
-      particles.push({ el, x: px, y: py, z: pz, lat: 0, lon: 0 });
+      particles.push({
+        tx: ix, ty: y, tz: iz,
+        x: ix, y: y, z: iz,
+        vx: 0, vy: 0, vz: 0,
+        baseSize: 0.6 + Math.random() * 1.8,
+        hue: 190 + Math.random() * 60, // 190-250: cyan to indigo
+        glow: 0.3 + Math.random() * 0.7,
+      });
     }
-
     particlesRef.current = particles;
 
-    // Mouse tracking
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    let mouseX = -9999;
+    let mouseY = -9999;
+    let smoothMouseX = -9999;
+    let smoothMouseY = -9999;
+
     const onMouse = (e: MouseEvent) => {
-      const cx = window.innerWidth / 2;
-      const cy = window.innerHeight / 2;
-      mouseRef.current = {
-        x: (e.clientX - cx) / cx,
-        y: (e.clientY - cy) / cy,
-      };
+      mouseX = e.clientX;
+      mouseY = e.clientY;
     };
     window.addEventListener("mousemove", onMouse);
 
-    // Animation loop
-    let baseAngle = 0;
     const animate = () => {
-      baseAngle += 0.003;
-      const mx = mouseRef.current.x * 0.8;
-      const my = mouseRef.current.y * 0.8;
-      const cx = container.offsetWidth / 2;
-      const cy = container.offsetHeight / 2;
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const dt = 1;
+
+      // Smooth mouse tracking
+      smoothMouseX += (mouseX - smoothMouseX) * 0.1;
+      smoothMouseY += (mouseY - smoothMouseY) * 0.1;
+
+      // Auto rotation
+      angleRef.current.y += 0.004;
+      angleRef.current.x += 0.0015;
+      const ay = angleRef.current.y;
+      const ax = angleRef.current.x;
+
+      // Mouse influence on rotation
+      const mx = ((smoothMouseX - cx) / cx) * 0.5;
+      const my = ((smoothMouseY - cy) / cy) * 0.5;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background glow
+      const bgGrad = ctx.createRadialGradient(cx, cy, RADIUS * 0.3, cx, cy, RADIUS * 1.3);
+      bgGrad.addColorStop(0, "rgba(100,140,255,0.06)");
+      bgGrad.addColorStop(0.5, "rgba(80,200,240,0.03)");
+      bgGrad.addColorStop(1, "transparent");
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
 
       for (const p of particles) {
-        // Rotate around Y axis (base rotation)
-        const cosA = Math.cos(baseAngle);
-        const sinA = Math.sin(baseAngle);
-        let x = p.x * cosA - p.z * sinA;
-        let z = p.x * sinA + p.z * cosA;
+        // Rotate target around Y axis
+        const cosA = Math.cos(ay + my);
+        const sinA = Math.sin(ay + my);
+        let ttx = p.tx * cosA - p.tz * sinA;
+        let ttz = p.tx * sinA + p.tz * cosA;
 
-        // Mouse influence (tilt)
-        const cosMx = Math.cos(mx);
-        const sinMx = Math.sin(mx);
-        let y = p.y * cosMx - z * sinMx;
-        z = p.y * sinMx + z * cosMx;
+        // Rotate around X axis
+        const cosB = Math.cos(ax + mx);
+        const sinB = Math.sin(ax + mx);
+        const tty = p.ty * cosB - ttz * sinB;
+        ttz = p.ty * sinB + ttz * cosB;
 
-        const cosMy = Math.cos(my);
-        const sinMy = Math.sin(my);
-        const x2 = x * cosMy - z * sinMy;
-        const z2 = x * sinMy + z * cosMy;
+        // Mouse repulsion
+        const sx = cx + ttx * RADIUS;
+        const sy = cy + tty * RADIUS;
+        const sz = ttz * RADIUS;
+        const mdx = smoothMouseX - sx;
+        const mdy = smoothMouseY - sy;
+        const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
 
-        // Project to screen
-        const scale = 400 / (400 + z2);
-        const sx = cx + x2 * radiusRef.current * scale;
-        const sy = cy + y * radiusRef.current * scale;
-        const alpha = 0.3 + (z2 + 1) * 0.35;
+        if (mdist < REPEL_RADIUS && smoothMouseX > 0) {
+          const force = (1 - mdist / REPEL_RADIUS) * REPEL_FORCE;
+          const nx = mdx / (mdist + 0.001);
+          const ny = mdy / (mdist + 0.001);
+          p.vx -= nx * force * 40;
+          p.vy -= ny * force * 40;
+          p.vz += (Math.random() - 0.5) * force * 20;
+        }
 
-        p.el.style.transform = `translate(${sx}px, ${sy}px)`;
-        p.el.style.opacity = String(Math.max(0.1, alpha));
+        // Spring toward target
+        p.vx += (ttx - p.x) * SPRING;
+        p.vy += (tty - p.y) * SPRING;
+        p.vz += (ttz - p.z) * SPRING;
+
+        // Damping
+        p.vx *= DAMPING;
+        p.vy *= DAMPING;
+        p.vz *= DAMPING;
+
+        // Integrate
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.z += p.vz * dt;
+
+        // Project
+        const scale = 350 / (350 + p.z);
+        const px = cx + p.x * RADIUS * scale;
+        const py = cy + p.y * RADIUS * scale;
+        const depth = (p.z + 1) / 2; // 0..1
+        const alpha = 0.15 + depth * 0.85;
+        const size = p.baseSize * scale * (1 + Math.abs(p.vx + p.vy) * 3);
+
+        // Glow aura
+        const aura = ctx.createRadialGradient(px, py, 0, px, py, size * 3);
+        const h = p.hue;
+        aura.addColorStop(0, `hsla(${h}, 80%, 70%, ${alpha * p.glow * 0.5})`);
+        aura.addColorStop(0.3, `hsla(${h}, 70%, 60%, ${alpha * 0.2})`);
+        aura.addColorStop(1, "transparent");
+        ctx.beginPath();
+        ctx.arc(px, py, size * 3, 0, Math.PI * 2);
+        ctx.fillStyle = aura;
+        ctx.fill();
+
+        // Core particle
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        const brightness = depth < 0.3 ? 40 : 60 + depth * 40;
+        ctx.fillStyle = `hsla(${h}, 80%, ${brightness}%, ${alpha})`;
+        ctx.fill();
+
+        // Bright center for depth
+        if (depth > 0.6) {
+          ctx.beginPath();
+          ctx.arc(px, py, size * 0.4, 0, Math.PI * 2);
+          ctx.fillStyle = `hsla(${h}, 60%, 90%, ${alpha * 0.7})`;
+          ctx.fill();
+        }
       }
 
       frameRef.current = requestAnimationFrame(animate);
@@ -110,16 +188,16 @@ export default function ParticleSphere() {
 
     return () => {
       cancelAnimationFrame(frameRef.current);
+      window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMouse);
-      for (const p of particles) p.el.remove();
     };
   }, []);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 z-0 overflow-hidden" style={{ background: "black" }}>
-      {/* Subtle center glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-cyan-500/8 rounded-full blur-2xl pointer-events-none" />
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 z-0"
+      style={{ background: "#050510" }}
+    />
   );
 }
