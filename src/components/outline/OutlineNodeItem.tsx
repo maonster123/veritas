@@ -19,30 +19,14 @@ interface Props {
 }
 
 const TYPE_HIERARCHY: Record<string, string[]> = {
-  chapter: ["section"],
-  section: ["subsection", "paragraph"],
-  subsection: ["paragraph"],
-  paragraph: [],
+  chapter: ["section"], section: ["subsection", "paragraph"], subsection: ["paragraph"], paragraph: [],
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  section: "节",
-  subsection: "小节",
-  paragraph: "段",
+  section: "Section", subsection: "Sub", paragraph: "Para",
 };
 
-export default function OutlineNodeItem({
-  node,
-  depth,
-  selectedId,
-  onSelect,
-  onDelete,
-  onUpdate,
-  onAdd,
-  onDragStart,
-  onDragOver,
-  onDrop,
-}: Props) {
+export default function OutlineNodeItem({ node, depth, selectedId, onSelect, onDelete, onUpdate, onAdd, onDragStart, onDragOver, onDrop }: Props) {
   const [expanded, setExpanded] = useState(true);
   const [editTitle, setEditTitle] = useState(false);
   const [title, setTitle] = useState(node.title);
@@ -50,132 +34,81 @@ export default function OutlineNodeItem({
   const isSelected = selectedId === node.id;
   const hasChildren = node.children.length > 0;
   const allowedChildTypes = TYPE_HIERARCHY[node.type] ?? [];
-
-  const handleTitleSave = () => {
-    if (title.trim() && title !== node.title) {
-      onUpdate(node.id, { title: title.trim() });
-    }
-    setEditTitle(false);
-  };
-
-  const indent = depth * 20;
+  const handleTitleSave = () => { if (title.trim() && title !== node.title) onUpdate(node.id, { title: title.trim() }); setEditTitle(false); };
 
   return (
     <div>
       <div
-        draggable
-        onDragStart={(e) => onDragStart(e, node.id)}
-        onDragOver={onDragOver}
-        onDrop={(e) => {
-          e.preventDefault();
-          onDrop(e, node.id);
-        }}
+        draggable onDragStart={e => onDragStart(e, node.id)} onDragOver={onDragOver} onDrop={e => { e.preventDefault(); onDrop(e, node.id); }}
         onClick={() => onSelect(node.id)}
-        className={`flex items-center gap-2 py-1.5 px-2 rounded cursor-pointer group hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ${
-          isSelected
-            ? "bg-blue-50 dark:bg-blue-950 ring-1 ring-blue-300 dark:ring-blue-700"
-            : ""
-        }`}
-        style={{ marginLeft: indent }}
+        className="flex items-center group"
+        style={{
+          marginLeft: depth * 16,
+          padding: "4px 8px",
+          borderRadius: 6,
+          cursor: "pointer",
+          background: isSelected ? "var(--brand-subtle)" : "transparent",
+          border: isSelected ? "1px solid var(--brand)" : "1px solid transparent",
+          transition: "all 0.1s ease",
+        }}
+        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "var(--bg-hover)"; }}
+        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
       >
-        {/* Expand/Collapse */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setExpanded(!expanded);
-          }}
-          className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-zinc-600 shrink-0 text-xs"
-        >
+        <button onClick={e => { e.stopPropagation(); setExpanded(!expanded); }}
+          style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-tertiary)", fontSize: 10, flexShrink: 0 }}>
           {hasChildren ? (expanded ? "▾" : "▸") : "◦"}
         </button>
 
-        {/* Type badge */}
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-400 shrink-0">
+        <span style={{
+          fontSize: 10, padding: "1px 6px", borderRadius: 4, flexShrink: 0, marginLeft: 6,
+          background: "var(--bg-subtle)", color: "var(--text-tertiary)",
+        }}>
           {nodeTypeLabel(node.type)}
         </span>
 
-        {/* Title */}
         {editTitle ? (
-          <input
-            autoFocus
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={handleTitleSave}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleTitleSave();
-              if (e.key === "Escape") setEditTitle(false);
-            }}
-            onClick={(e) => e.stopPropagation()}
-            className="flex-1 text-sm bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+          <input autoFocus value={title} onChange={e => setTitle(e.target.value)}
+            onBlur={handleTitleSave} onKeyDown={e => { if (e.key === "Enter") handleTitleSave(); if (e.key === "Escape") setEditTitle(false); }}
+            onClick={e => e.stopPropagation()}
+            className="input-field" style={{ flex: 1, marginLeft: 8, height: 28, fontSize: 14 }} />
         ) : (
-          <span
-            className="flex-1 text-sm text-zinc-800 dark:text-zinc-200 truncate"
-            onDoubleClick={() => setEditTitle(true)}
-          >
+          <span style={{ flex: 1, marginLeft: 8, fontSize: 14, color: isSelected ? "var(--brand)" : "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            onDoubleClick={() => setEditTitle(true)}>
             {node.title}
           </span>
         )}
 
-        {/* Action buttons */}
-        <div className="hidden group-hover:flex items-center gap-1 shrink-0">
+        <div style={{ display: "none", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 4 }} className="group-hover:flex">
           {allowedChildTypes.length > 0 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowAdd(!showAdd);
-              }}
-              className="w-6 h-6 flex items-center justify-center text-xs text-zinc-400 hover:text-green-600 rounded"
-              title="添加子节点"
-            >
+            <button onClick={e => { e.stopPropagation(); setShowAdd(!showAdd); }}
+              style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "var(--text-tertiary)", borderRadius: 4 }}
+              onMouseEnter={e => e.currentTarget.style.color = "var(--brand)"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--text-tertiary)"}>
               +
             </button>
           )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (confirm("确定删除此节点及其所有子节点？")) onDelete(node.id);
-            }}
-            className="w-6 h-6 flex items-center justify-center text-xs text-zinc-400 hover:text-red-600 rounded"
-            title="删除"
-          >
+          <button onClick={e => { e.stopPropagation(); if (confirm("Delete this node?")) onDelete(node.id); }}
+            style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "var(--text-tertiary)", borderRadius: 4 }}
+            onMouseEnter={e => e.currentTarget.style.color = "#ef4444"}
+            onMouseLeave={e => e.currentTarget.style.color = "var(--text-tertiary)"}>
             ×
           </button>
         </div>
       </div>
 
-      {/* Add child form */}
       {showAdd && allowedChildTypes.length > 0 && (
-        <div style={{ marginLeft: indent + 24 }} className="mb-1">
-          <AddNodeForm
-            onAdd={(title, type) => {
-              onAdd(node.id, title, type);
-              setShowAdd(false);
-            }}
-            onCancel={() => setShowAdd(false)}
-            types={allowedChildTypes}
-            typeLabels={TYPE_LABELS}
-          />
+        <div style={{ marginLeft: (depth + 1) * 16 + 8, marginBottom: 4 }}>
+          <AddNodeForm onAdd={(title, type) => { onAdd(node.id, title, type); setShowAdd(false); }}
+            onCancel={() => setShowAdd(false)} types={allowedChildTypes} typeLabels={TYPE_LABELS} />
         </div>
       )}
 
-      {/* Children */}
       {expanded && hasChildren && (
         <div>
-          {node.children.map((child) => (
-            <OutlineNodeItem
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              selectedId={selectedId}
-              onSelect={onSelect}
-              onDelete={onDelete}
-              onUpdate={onUpdate}
-              onAdd={onAdd}
-              onDragStart={onDragStart}
-              onDragOver={onDragOver}
-              onDrop={onDrop}
-            />
+          {node.children.map(child => (
+            <OutlineNodeItem key={child.id} node={child} depth={depth + 1} selectedId={selectedId}
+              onSelect={onSelect} onDelete={onDelete} onUpdate={onUpdate} onAdd={onAdd}
+              onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} />
           ))}
         </div>
       )}

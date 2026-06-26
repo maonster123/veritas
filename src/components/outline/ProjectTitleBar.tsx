@@ -16,88 +16,47 @@ export default function ProjectTitleBar({ projectId, title, subtitle }: Props) {
   const [subtitleDraft, setSubtitleDraft] = useState(subtitle ?? "");
 
   const saveTitle = async () => {
-    const trimmed = titleDraft.trim();
-    if (trimmed && trimmed !== title) {
-      await updateProject(projectId, { title: trimmed });
-    }
+    const t = titleDraft.trim();
+    if (t && t !== title) await updateProject(projectId, { title: t });
     setEditingTitle(false);
   };
-
   const saveSubtitle = async () => {
-    const trimmed = subtitleDraft.trim();
-    if (trimmed !== (subtitle ?? "")) {
-      await updateProject(projectId, { subtitle: trimmed || undefined });
-    }
+    const t = subtitleDraft.trim();
+    if (t !== (subtitle ?? "")) await updateProject(projectId, { subtitle: t || undefined });
     setEditingSubtitle(false);
   };
 
   return (
-    <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 space-y-2">
-      {/* Title */}
+    <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border-default)" }}>
       {editingTitle ? (
-        <input
-          autoFocus
-          value={titleDraft}
-          onChange={(e) => setTitleDraft(e.target.value)}
-          onBlur={saveTitle}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") saveTitle();
-            if (e.key === "Escape") setEditingTitle(false);
-          }}
-          className="w-full text-sm font-semibold bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-zinc-800 dark:text-zinc-200"
-        />
+        <input autoFocus value={titleDraft} onChange={e => setTitleDraft(e.target.value)}
+          onBlur={saveTitle} onKeyDown={e => { if (e.key === "Enter") saveTitle(); if (e.key === "Escape") setEditingTitle(false); }}
+          className="input-field" style={{ width: "100%", fontWeight: 600, fontSize: 16 }} />
       ) : (
-        <h1
-          className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 cursor-pointer hover:text-blue-600 transition-colors py-1.5"
-          onClick={() => setEditingTitle(true)}
-        >
-          {title || "未命名论文"}
+        <h1 className="heading-sm" style={{ cursor: "pointer", color: "var(--text-primary)" }}
+          onClick={() => setEditingTitle(true)}>
+          {title || "Untitled"}
         </h1>
       )}
 
-      {/* Subtitle */}
-      {editingSubtitle ? (
-        <div className="flex gap-1">
-          <input
-            autoFocus
-            value={subtitleDraft}
-            onChange={(e) => setSubtitleDraft(e.target.value)}
-            onBlur={saveSubtitle}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") saveSubtitle();
-              if (e.key === "Escape") { setEditingSubtitle(false); setSubtitleDraft(subtitle ?? ""); }
-            }}
-            placeholder="添加副标题..."
-            className="w-full text-xs text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-zinc-400"
-          />
-          {subtitle && (
-            <button
-              onMouseDown={() => {
-                setSubtitleDraft("");
-                updateProject(projectId, { subtitle: undefined });
-                setEditingSubtitle(false);
-              }}
-              className="text-xs text-zinc-400 hover:text-red-500 shrink-0"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      ) : subtitle ? (
-        <p
-          className="text-xs text-zinc-500 dark:text-zinc-400 cursor-pointer hover:text-blue-600 transition-colors"
-          onClick={() => { setEditingSubtitle(true); setSubtitleDraft(subtitle); }}
-        >
-          {subtitle}
-        </p>
-      ) : (
-        <p
-          className="text-xs text-zinc-400 cursor-pointer hover:text-blue-600 transition-colors"
-          onClick={() => setEditingSubtitle(true)}
-        >
-          添加副标题...
-        </p>
-      )}
+      <div style={{ marginTop: 4 }}>
+        {editingSubtitle ? (
+          <input autoFocus value={subtitleDraft} onChange={e => setSubtitleDraft(e.target.value)}
+            onBlur={saveSubtitle} onKeyDown={e => { if (e.key === "Enter") saveSubtitle(); if (e.key === "Escape") { setEditingSubtitle(false); setSubtitleDraft(subtitle ?? ""); } }}
+            placeholder="Add subtitle..."
+            className="input-field" style={{ width: "100%", fontSize: 14, color: "var(--text-secondary)" }} />
+        ) : subtitle ? (
+          <p style={{ fontSize: 14, cursor: "pointer", color: "var(--text-secondary)" }}
+            onClick={() => { setEditingSubtitle(true); setSubtitleDraft(subtitle); }}>
+            {subtitle}
+          </p>
+        ) : (
+          <p style={{ fontSize: 14, cursor: "pointer", color: "var(--text-tertiary)" }}
+            onClick={() => setEditingSubtitle(true)}>
+            Add subtitle...
+          </p>
+        )}
+      </div>
     </div>
   );
 }

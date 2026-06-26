@@ -60,73 +60,62 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
     [handleMove]
   );
 
+  const sidebarW = "w-[320px]";
+
   return (
-    <div className="flex flex-1 h-screen">
-      {/* Left: Outline tree */}
-      <div className="w-96 shrink-0 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex h-screen max-w-[1200px] mx-auto" style={{ background: "var(--bg-root)" }}>
+      {/* Left: Outline sidebar */}
+      <div className={`${sidebarW} shrink-0 flex flex-col border-r`} style={{ borderColor: "var(--border-default)", background: "var(--bg-surface)" }}>
         <ProjectTitleBar projectId={projectId} title={title} subtitle={subtitle} />
-        <div className="sticky top-0 z-10 px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 flex items-center justify-between">
-          <span className="text-xs font-medium text-zinc-500">大纲</span>
-          <div className="flex items-center gap-2">
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-[16px] py-[8px] border-b" style={{ borderColor: "var(--border-default)" }}>
+          <span className="heading-xs" style={{ color: "var(--text-secondary)" }}>Outline</span>
+          <div className="flex items-center gap-[8px]">
             <button
-              onClick={async () => {
-                const nextLang = currentLang === "zh" ? "en" : "zh";
-                setCurrentLang(nextLang);
-                await updateProjectLang(projectId, nextLang);
-              }}
-              className={`text-xs px-2 py-1 rounded transition-colors ${
-                currentLang === "zh"
-                  ? "bg-red-50 text-red-600 hover:bg-red-100"
-                  : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-              }`}
-              title={currentLang === "zh" ? "中文论文模式" : "English thesis mode"}
+              onClick={async () => { const nl = currentLang === "zh" ? "en" : "zh"; setCurrentLang(nl); await updateProjectLang(projectId, nl); }}
+              className="btn btn-ghost" style={{ height: 32, padding: "0 8px", fontSize: 12 }}
             >
               {currentLang === "zh" ? "中" : "EN"}
             </button>
-            <button
-              onClick={() => setShowExportDialog(true)}
-              className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-            >
-              导出
+            <button onClick={() => setShowExportDialog(true)} className="btn btn-primary" style={{ height: 32, fontSize: 12, padding: "0 12px" }}>
+              Export
             </button>
-            <button
-              onClick={() => signOut({ callbackUrl: "/auth/login" })}
-              className="text-xs px-3 py-1.5 border border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-            >
-              退出
+            <button onClick={() => signOut({ callbackUrl: "/auth/login" })} className="btn btn-ghost" style={{ height: 32, fontSize: 12, padding: "0 8px" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
         </div>
-        {state.loading ? (
-          <div className="p-4 text-sm text-zinc-400">加载中...</div>
-        ) : (
-          <OutlineTree
-            tree={state.tree}
-            selectedId={state.selectedId}
-            onSelect={(id) => dispatch({ type: "SELECT", id })}
-            onDelete={handleDelete}
-            onUpdate={(id, data) => handleUpdate(id, data)}
-            onAdd={(parentId, title, type) => handleAdd(parentId, title, type)}
-            onDragStart={onDragStart}
-            onDragOver={onDragOver}
-            onDrop={onDrop}
-          />
-        )}
+
+        {/* Outline tree */}
+        <div className="flex-1 overflow-y-auto px-[8px] py-[8px]">
+          {state.loading ? (
+            <div className="text-center" style={{ padding: 24, color: "var(--text-tertiary)", fontSize: 14 }}>Loading...</div>
+          ) : (
+            <OutlineTree
+              tree={state.tree}
+              selectedId={state.selectedId}
+              onSelect={(id) => dispatch({ type: "SELECT", id })}
+              onDelete={handleDelete}
+              onUpdate={(id, data) => handleUpdate(id, data)}
+              onAdd={(parentId, title, type) => handleAdd(parentId, title, type)}
+              onDragStart={onDragStart}
+              onDragOver={onDragOver}
+              onDrop={onDrop}
+            />
+          )}
+        </div>
       </div>
 
-      {/* Right: Content editor + aux panel */}
+      {/* Right: Editor */}
       <div className="flex-1 min-w-0 min-h-0">
         <ContentEditor node={selectedNode} onUpdate={handleUpdate} onReload={loadTree} hasApiKey={hasApiKey} lang={currentLang} />
       </div>
 
       {showExportDialog && (
         <ExportDialog
-          projectId={projectId}
-          title={title}
-          keywords={keywords}
-          titlePage={titlePage}
-          isEnglish={currentLang === "en"}
-          onClose={() => setShowExportDialog(false)}
+          projectId={projectId} title={title} keywords={keywords} titlePage={titlePage}
+          isEnglish={currentLang === "en"} onClose={() => setShowExportDialog(false)}
         />
       )}
     </div>
