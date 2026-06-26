@@ -191,8 +191,8 @@ export async function GET(request: NextRequest) {
 
   children.push(new Paragraph({ spacing: { line: pf.lineSpacing, lineRule: "auto" as const } }));
 
-  // Keywords
-  if (project.keywords) {
+  // Keywords (skip for MLA)
+  if (project.keywords && citationName !== "MLA 9th") {
     children.push(new Paragraph({
       children: [
         new TextRun({ text: isEnglish ? "Keywords" : "关键词", bold: true, italics: true, ...bodyRun }),
