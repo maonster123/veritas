@@ -118,7 +118,7 @@ export function buildDocument(
       year: ref.year,
       publisher: null,
       url: null,
-      doi: null,
+      doi: (ref as any).doi ?? null,
     };
     const text = formatReferenceEntry(refData, {
       name: citationConfig.styleName ?? "",
