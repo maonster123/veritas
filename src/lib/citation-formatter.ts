@@ -253,11 +253,14 @@ export function formatReferenceEntry(
     vars.journal = vars.journal.replace(/\.+$/, "");
   }
 
-  // Build citation parts conditionally (skip empty slots)
+  // Fill all placeholders (empty strings for missing values)
   let result = tmpl
     .replace(/\{authors\}/g, vars.authors)
     .replace(/\{title\}/g, vars.title)
     .replace(/\{journal\}/g, vars.journal)
+    .replace(/\{volume\}/g, vars.volume)
+    .replace(/\{issue\}/g, vars.issue)
+    .replace(/\{pages\}/g, vars.pages)
     .replace(/\{year\}/g, vars.year)
     .replace(/\{publisher\}/g, vars.publisher)
     .replace(/\{address\}/g, vars.address)
@@ -267,18 +270,20 @@ export function formatReferenceEntry(
     .replace(/\{month\}/g, vars.month)
     .replace(/\{edition\}/g, "");
 
-  // Conditionally include vol/no/pages only when values exist
-  if (vars.volume) result = result.replace(/\{volume\}/g, vars.volume);
-  else result = result.replace(/,\s*vol\.\s*\{volume\}/g, "").replace(/vol\.\s*\{volume\},\s*/g, "");
-
-  if (vars.issue) result = result.replace(/\{issue\}/g, vars.issue);
-  else result = result.replace(/,\s*no\.\s*\{issue\}/g, "").replace(/no\.\s*\{issue\},\s*/g, "");
-
-  if (vars.pages) result = result.replace(/\{pages\}/g, vars.pages);
-  else result = result.replace(/,\s*pp\.\s*\{pages\}/g, "").replace(/pp\.\s*\{pages\}/g, "");
-
-  // Cleanup: double spaces, orphan commas, orphan periods
-  result = result.replace(/\s{2,}/g, " ").replace(/,\s*,/g, ",").replace(/,\s+doi:/g, ". doi:").replace(/\.{2,}/g, ".").trim();
+  // Universal cleanup — handle all empty-value artifacts across all formats
+  result = result
+    .replace(/, vol\. ,/g, "")       // empty volume (MLA/IEEE pattern)
+    .replace(/, no\. ,/g, "")        // empty issue (MLA/IEEE pattern)
+    .replace(/, pp\. \./g, "")       // empty pages (MLA/IEEE pattern)
+    .replace(/\(\)/g, "")            // empty parens (APA pattern: {volume}({issue}) → 61()
+    .replace(/, :/g, ",")            // orphan colon
+    .replace(/;:/g, ";")             // empty NLM field between semicolons
+    .replace(/;\(\):/g, ";")         // empty NLM issue
+    .replace(/, {2,}/g, ", ")        // double commas → single
+    .replace(/\s{2,}/g, " ")         // double spaces → single
+    .replace(/,\s+doi:/g, ". doi:")  // comma before doi → period
+    .replace(/\.{2,}/g, ".")         // double periods → single
+    .trim();
 
   // Append DOI for MLA 9th and IEEE
   if ((isMLA || isIEEE) && ref.doi) {
