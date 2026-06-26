@@ -14,7 +14,7 @@ export default function LandingContent() {
           </div>
         </div>
         <div className="text-center space-y-3">
-          <h1 className="text-2xl font-bold tracking-tight text-white">Thesis Outline</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Veritas</h1>
           <p className="text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">AI-powered academic writing assistant. Structure, cite, export.</p>
         </div>
         <div className="flex flex-col gap-3">
