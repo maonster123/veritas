@@ -13,7 +13,7 @@ export default function LandingPage() {
       <div className="absolute inset-0 z-0">
         <Suspense fallback={<div className="absolute inset-0 bg-gradient-to-br from-[#0b1121] via-[#131b33] to-[#0f172a]" />}>
           <Spline
-            scene="https://prod.spline.design/v4HbHLsfEwL-g3to/scene.splinecode"
+            scene="https://prod.spline.design/f2oG6hIajWVTZDZL/scene.splinecode"
             className="w-full h-full"
           />
         </Suspense>

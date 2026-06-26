@@ -26,7 +26,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: "#0b1121" }}>
       <div className="absolute inset-0 z-0">
         <Suspense fallback={<div className="absolute inset-0 bg-gradient-to-br from-[#0b1121] via-[#131b33] to-[#0f172a]" />}>
-          <Spline scene="https://prod.spline.design/v4HbHLsfEwL-g3to/scene.splinecode" className="w-full h-full" />
+          <Spline scene="https://prod.spline.design/f2oG6hIajWVTZDZL/scene.splinecode" className="w-full h-full" />
         </Suspense>
       </div>
       <div className="absolute inset-0 z-[1] bg-gradient-to-b from-transparent to-[#0b1121]/50 pointer-events-none" />
