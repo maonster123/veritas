@@ -257,47 +257,57 @@ export function formatReferenceEntry(
     vars.journal = vars.journal.replace(/\.+$/, "");
   }
 
-  // Fill all placeholders (empty strings for missing values)
-  let result = tmpl
-    .replace(/\{authors\}/g, vars.authors)
-    .replace(/\{title\}/g, vars.title)
-    .replace(/\{journal\}/g, vars.journal)
-    .replace(/\{volume\}/g, vars.volume)
-    .replace(/\{issue\}/g, vars.issue)
-    .replace(/\{pages\}/g, vars.pages)
-    .replace(/\{year\}/g, vars.year)
-    .replace(/\{publisher\}/g, vars.publisher)
-    .replace(/\{address\}/g, vars.address)
-    .replace(/\{index\}/g, vars.index)
-    .replace(/\{doi\}/g, vars.doi)
-    .replace(/\{url\}/g, vars.url)
-    .replace(/\{month\}/g, vars.month)
-    .replace(/\{edition\}/g, "");
+  // ── Build citation programmatically (no template, no regex cleanup) ──
+  const V = vars.volume;
+  const I = vars.issue;
+  const P = vars.pages;
+  const Y = vars.year;
+  const doi = vars.doi ? (vars.doi.startsWith("http") ? vars.doi : `https://doi.org/${vars.doi}`) : "";
+  const pub = vars.publisher;
 
-  // Universal cleanup — handle all empty-value artifacts across all formats
-  result = result
-    .replace(/vol\.\s*,/g, "")       // empty volume
-    .replace(/no\.\s*,/g, "")        // empty issue
-    .replace(/pp\.\s*\./g, "")       // empty pages (MLA pattern: "pp. .")
-    .replace(/pp\.\s*,/g, "")       // empty pages (IEEE pattern: "pp. ,")
-    .replace(/\(\)/g, "")            // empty parens (APA)
-    .replace(/,\s+\./g, ".")         // orphan comma-period
-    .replace(/, :/g, ",")            // orphan colon
-    .replace(/;:/g, ";")             // empty NLM between semicolons
-    .replace(/;\(\):/g, ";")         // empty NLM issue+pages
-    .replace(/;:/g, ";")             // double semicolon
-    .replace(/:\s*\./g, ".")         // orphan colon (NLM empty pages: "12:." → "12.")
-    .replace(/;\./g, ".")            // orphan semicolon
-    .replace(/,\s*,/g, ",")          // double commas → single
-    .replace(/\s{2,}/g, " ")         // double spaces → single
-    .replace(/,\s+doi:/g, ". doi:")  // comma before doi → period
-    .replace(/\.{2,}/g, ".")         // double periods → single
-    .trim();
+  let result = "";
 
-  // Append DOI for MLA 9th and IEEE
-  if ((isMLA || isIEEE) && ref.doi) {
-    result = result.replace(/[,;.]+$/, "").trimEnd();
-    result += `. doi:${ref.doi}.`;
+  if (style.name === "APA 7th" || style.formatType === "author_year") {
+    // APA 7th: Authors. (Year). Title. Journal, Volume(Issue), Pages. https://doi.org/xxx
+    const volIssue = V ? (I ? `${V}(${I})` : V) : "";
+    const pages = P || "";
+    result = `${vars.authors} (${Y}). ${vars.title}. ${vars.journal}`;
+    if (volIssue || pages) result += `, ${[volIssue, pages].filter(Boolean).join(", ")}`;
+    result += ".";
+    if (doi) result += ` ${doi}`;
+  } else if (style.name === "MLA 9th" || style.formatType === "author_page") {
+    // MLA 9th: Authors. "Title." Journal, vol. Volume, no. Issue, Year, pp. Pages.
+    result = `${vars.authors}. "${vars.title}." ${vars.journal}`;
+    if (V) result += `, vol. ${V}`;
+    if (I) result += `, no. ${I}`;
+    if (Y) result += `, ${Y}`;
+    if (P) result += `, pp. ${P}`;
+    result += ".";
+    if (doi) result += ` doi:${ref.doi}.`;
+  } else if (style.name === "IEEE") {
+    // IEEE: A. Author, "Title," Journal, vol. X, no. X, pp. X, Year.
+    result = `${vars.authors}, "${vars.title}," ${vars.journal}`;
+    if (V) result += `, vol. ${V}`;
+    if (I) result += `, no. ${I}`;
+    if (P) result += `, pp. ${P}`;
+    if (Y) result += `, ${Y}`;
+    result += ".";
+    if (doi) result += ` doi:${ref.doi}.`;
+  } else if (style.name === "NLM") {
+    // NLM: Authors. Title. Journal Abbrev. Year;Volume(Issue):Pages. doi:xxx
+    result = `${vars.authors}. ${vars.title}. ${vars.journal}. ${Y}`;
+    if (V) {
+      result += `;${V}`;
+      if (I) result += `(${I})`;
+      if (P) result += `:${P}`;
+    }
+    result += ".";
+    if (doi) result += ` doi:${ref.doi}.`;
+  } else {
+    // GB/T 7714 & others: Authors. Title[J]. Journal, Year, Volume(Issue): Pages.
+    const volIssue = V ? (I ? `${V}(${I})` : V) : "";
+    const pages = P ? `: ${P}` : "";
+    result = `${vars.authors}. ${vars.title}[J]. ${vars.journal}, ${Y}, ${volIssue}${pages}.`;
   }
 
   return result;
