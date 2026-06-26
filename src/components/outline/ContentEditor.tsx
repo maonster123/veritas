@@ -40,18 +40,16 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
   };
 
   return (
-    <div className="h-full grid grid-cols-[360px_1fr] min-h-0">
+    <div className="h-full grid grid-cols-[320px_1fr] min-h-0">
       {/* ── Left: Auxiliary panel (tabs) ── */}
-      <div className="border-r border-zinc-200 dark:border-zinc-800 flex flex-col min-h-0">
+      <div className="flex flex-col min-h-0" style={{ borderRight: "1px solid var(--border-default)", background: "var(--bg-surface)" }}>
         {/* Node header */}
-        <div className="px-4 py-3 border-b border-zinc-200 dark:border-zinc-800 shrink-0">
-          <h2 className="text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate">
-            {node.title}
-          </h2>
+        <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border-default)", flexShrink: 0 }}>
+          <h2 className="heading-sm truncate" style={{ color: "var(--text-primary)" }}>{node.title}</h2>
           {node.outlineReferences && node.outlineReferences.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
               {node.outlineReferences.map((or) => (
-                <span key={or.id} className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">
+                <span key={or.id} style={{ fontSize: 12, padding: "2px 8px", borderRadius: 4, background: "var(--brand-subtle)", color: "var(--brand)" }}>
                   {or.citationText || `[${or.reference.title}]`}
                 </span>
               ))}
@@ -60,16 +58,16 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
         </div>
 
         {/* Aux tabs */}
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800 shrink-0">
-          <AuxTabButton active={activeAux === "notes"} onClick={() => setActiveAux("notes")}>备注</AuxTabButton>
-          <AuxTabButton active={activeAux === "ai"} onClick={() => setActiveAux("ai")}>AI推荐</AuxTabButton>
-          <AuxTabButton active={activeAux === "resources"} onClick={() => setActiveAux("resources")}>文献推荐</AuxTabButton>
-          <AuxTabButton active={activeAux === "chat"} onClick={() => setActiveAux("chat")}>AI助手</AuxTabButton>
-          <AuxTabButton active={activeAux === "norm"} onClick={() => setActiveAux("norm")}>引用规范</AuxTabButton>
+        <div className="flex shrink-0" style={{ borderBottom: "1px solid var(--border-default)" }}>
+          <AuxTabButton active={activeAux === "notes"} onClick={() => setActiveAux("notes")}>Notes</AuxTabButton>
+          <AuxTabButton active={activeAux === "ai"} onClick={() => setActiveAux("ai")}>AI</AuxTabButton>
+          <AuxTabButton active={activeAux === "resources"} onClick={() => setActiveAux("resources")}>Resources</AuxTabButton>
+          <AuxTabButton active={activeAux === "chat"} onClick={() => setActiveAux("chat")}>Chat</AuxTabButton>
+          <AuxTabButton active={activeAux === "norm"} onClick={() => setActiveAux("norm")}>Cite</AuxTabButton>
         </div>
 
         {/* Aux content */}
-        <div className="flex-1 p-4">
+        <div className="flex-1" style={{ padding: 16 }}>
           {activeAux === "notes" ? (
             <NotesPanel notes={notes} setNotes={setNotes} saveNotes={() => onUpdate(node.id, { notes })} />
           ) : activeAux === "ai" ? (
@@ -85,17 +83,18 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
       </div>
 
       {/* ── Right: Content (always visible) ── */}
-      <div className="flex flex-col min-h-0 min-w-0">
-        <div className="px-4 py-2 border-b border-zinc-200 dark:border-zinc-800 shrink-0 flex items-center justify-between">
-          <span className="text-xs font-medium text-zinc-500">正文</span>
-          <span className="text-[10px] text-zinc-400">支持 Markdown</span>
+      <div className="flex flex-col min-h-0 min-w-0" style={{ background: "var(--bg-root)" }}>
+        <div className="flex items-center justify-between shrink-0" style={{ padding: "8px 24px", borderBottom: "1px solid var(--border-default)" }}>
+          <span className="heading-xs" style={{ color: "var(--text-secondary)" }}>Content</span>
+          <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Markdown</span>
         </div>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onBlur={saveContent}
-          placeholder="在此撰写正文..."
-          className="flex-1 w-full bg-transparent text-sm text-zinc-800 dark:text-zinc-200 resize-none focus:outline-none placeholder:text-zinc-400 p-4"
+          placeholder="Start writing..."
+          className="flex-1 w-full resize-none"
+          style={{ background: "transparent", border: "none", outline: "none", fontSize: 16, lineHeight: 1.6, color: "var(--text-primary)", padding: 24, fontFamily: "system-ui, sans-serif" }}
         />
         <RefSection node={node} onReload={onReload} />
       </div>
@@ -105,14 +104,13 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
 
 function AuxTabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
-    <button
-      onClick={onClick}
-      className={`px-3 py-2 text-xs font-medium whitespace-nowrap ${
-        active
-          ? "border-b-2 border-blue-600 text-blue-600"
-          : "text-zinc-500 hover:text-zinc-700"
-      }`}
-    >
+    <button onClick={onClick}
+      style={{
+        padding: "8px 12px", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap",
+        color: active ? "var(--brand)" : "var(--text-tertiary)",
+        borderBottom: active ? "2px solid var(--brand)" : "2px solid transparent",
+        background: "transparent", cursor: "pointer", transition: "all 0.1s",
+      }}>
       {children}
     </button>
   );
