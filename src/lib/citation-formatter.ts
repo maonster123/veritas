@@ -288,8 +288,8 @@ export function formatReferenceEntry(
 
   // Append DOI for MLA 9th and IEEE
   if ((isMLA || isIEEE) && ref.doi) {
-    const needsPeriod = !result.endsWith(".");
-    result += `${needsPeriod ? ". " : " "}doi:${ref.doi}.`;
+    result = result.replace(/[,;]+$/, "").trimEnd();
+    result += `. doi:${ref.doi}.`;
   }
 
   return result;
