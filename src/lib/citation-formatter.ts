@@ -253,10 +253,32 @@ export function formatReferenceEntry(
     vars.journal = vars.journal.replace(/\.+$/, "");
   }
 
-  let result = fillTemplate(tmpl, vars);
+  // Build citation parts conditionally (skip empty slots)
+  let result = tmpl
+    .replace(/\{authors\}/g, vars.authors)
+    .replace(/\{title\}/g, vars.title)
+    .replace(/\{journal\}/g, vars.journal)
+    .replace(/\{year\}/g, vars.year)
+    .replace(/\{publisher\}/g, vars.publisher)
+    .replace(/\{address\}/g, vars.address)
+    .replace(/\{index\}/g, vars.index)
+    .replace(/\{doi\}/g, vars.doi)
+    .replace(/\{url\}/g, vars.url)
+    .replace(/\{month\}/g, vars.month)
+    .replace(/\{edition\}/g, "");
 
-  // Clean empty template slots (e.g., "no. ," "pp. .")
-  result = result.replace(/,\s*vol\.\s+,\s*/g, "").replace(/,\s*no\.\s+,\s*/g, "").replace(/,\s*pp\.\s+\./g, "").replace(/,\s*,/g, ",").replace(/\s{2,}/g, " ").replace(/,\s+doi:/g, ". doi:");
+  // Conditionally include vol/no/pages only when values exist
+  if (vars.volume) result = result.replace(/\{volume\}/g, vars.volume);
+  else result = result.replace(/,\s*vol\.\s*\{volume\}/g, "").replace(/vol\.\s*\{volume\},\s*/g, "");
+
+  if (vars.issue) result = result.replace(/\{issue\}/g, vars.issue);
+  else result = result.replace(/,\s*no\.\s*\{issue\}/g, "").replace(/no\.\s*\{issue\},\s*/g, "");
+
+  if (vars.pages) result = result.replace(/\{pages\}/g, vars.pages);
+  else result = result.replace(/,\s*pp\.\s*\{pages\}/g, "").replace(/pp\.\s*\{pages\}/g, "");
+
+  // Cleanup: double spaces, orphan commas, orphan periods
+  result = result.replace(/\s{2,}/g, " ").replace(/,\s*,/g, ",").replace(/,\s+doi:/g, ". doi:").replace(/\.{2,}/g, ".").trim();
 
   // Append DOI for MLA 9th and IEEE
   if ((isMLA || isIEEE) && ref.doi) {
