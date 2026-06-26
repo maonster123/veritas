@@ -272,11 +272,11 @@ export function formatReferenceEntry(
 
   // Universal cleanup — handle all empty-value artifacts across all formats
   result = result
-    .replace(/, vol\. ,/g, "")       // empty volume (MLA/IEEE)
-    .replace(/, no\. ,/g, "")        // empty issue (MLA/IEEE)
-    .replace(/, pp\. \./g, "")       // empty pages (MLA/IEEE)
+    .replace(/vol\.\s*,/g, "")       // empty volume
+    .replace(/no\.\s*,/g, "")        // empty issue
+    .replace(/pp\.\s*\./g, "")       // empty pages
     .replace(/\(\)/g, "")            // empty parens (APA)
-    .replace(/,\s+\./g, ".")         // orphan comma-period (APA empty pages: "12, ." → "12.")
+    .replace(/,\s+\./g, ".")         // orphan comma-period
     .replace(/, :/g, ",")            // orphan colon
     .replace(/;:/g, ";")             // empty NLM between semicolons
     .replace(/;\(\):/g, ";")         // empty NLM issue
