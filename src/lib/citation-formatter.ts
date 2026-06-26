@@ -92,17 +92,17 @@ function formatAuthorsNLM(authors: AuthorEntry[]): string {
 function formatAuthorsIEEE(authors: AuthorEntry[]): string {
   if (authors.length === 0) return "";
   const sorted = [...authors].sort((a, b) => a.order - b.order);
-  return sorted
-    .map((a) => {
-      // Organizational author (no given name)
-      if (!a.given.trim()) return a.family;
-      const initials = a.given
-        .split(/\s+/)
-        .map((w) => (w[0] ?? "").toUpperCase() + ".")
-        .join(" ");
-      return `${initials} ${a.family}`;
-    })
-    .join(", ");
+  const names = sorted.map((a) => {
+    if (!a.given.trim()) return a.family;
+    const initials = a.given
+      .split(/\s+/)
+      .map((w) => (w[0] ?? "").toUpperCase() + ".")
+      .join(" ");
+    return `${initials} ${a.family}`;
+  });
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return names.slice(0, -1).join(", ") + ", and " + names[names.length - 1];
 }
 
 // ── IEEE Journal Abbreviations ──
@@ -274,7 +274,8 @@ export function formatReferenceEntry(
   result = result
     .replace(/vol\.\s*,/g, "")       // empty volume
     .replace(/no\.\s*,/g, "")        // empty issue
-    .replace(/pp\.\s*\./g, "")       // empty pages
+    .replace(/pp\.\s*\./g, "")       // empty pages (MLA pattern: "pp. .")
+    .replace(/pp\.\s*,/g, "")       // empty pages (IEEE pattern: "pp. ,")
     .replace(/\(\)/g, "")            // empty parens (APA)
     .replace(/,\s+\./g, ".")         // orphan comma-period
     .replace(/, :/g, ",")            // orphan colon
