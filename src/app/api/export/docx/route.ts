@@ -227,7 +227,7 @@ export async function GET(request: NextRequest) {
     const hangIndent = convertMillimetersToTwip(12.7);
     for (const ref of sortedRefs) {
       children.push(new Paragraph({
-        text: ref.text,
+        children: parseItalicRuns(ref.text, bodyRun),
         spacing: { line: pf.lineSpacing, lineRule: "auto" as const },
         indent: { left: hangIndent, hanging: hangIndent },
       }));
@@ -266,6 +266,20 @@ export async function GET(request: NextRequest) {
       "Content-Disposition": `attachment; filename="${encodeURIComponent(docData.title)}.docx"`,
     },
   });
+}
+
+// Parse _text_ → italic TextRuns
+function parseItalicRuns(text: string, baseRun: any): TextRun[] {
+  const runs: TextRun[] = [];
+  const parts = text.split(/(_[^_]+_)/g);
+  for (const p of parts) {
+    if (p.startsWith("_") && p.endsWith("_")) {
+      runs.push(new TextRun({ text: p.slice(1, -1), italics: true, ...baseRun }));
+    } else {
+      runs.push(new TextRun({ text: p, ...baseRun }));
+    }
+  }
+  return runs;
 }
 
 // ── Section rendering ──

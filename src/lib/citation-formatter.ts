@@ -279,8 +279,8 @@ export function formatReferenceEntry(
     // MLA 9th
     const isBook = !ref.journal;
     if (isBook) {
-      // Book: Authors. Title. Publisher, Year.
-      result = `${vars.authors}. ${vars.title}.`;
+      // Book: Authors. _Title._ Publisher, Year.
+      result = `${vars.authors}. _${vars.title}._`;
       if (pub) result += ` ${pub}`;
       if (Y) result += `, ${Y}`;
       result += ".";
