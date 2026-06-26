@@ -255,6 +255,9 @@ export function formatReferenceEntry(
 
   let result = fillTemplate(tmpl, vars);
 
+  // Clean empty template slots (e.g., "no. ," "pp. .")
+  result = result.replace(/vol\.\s+,\s*/g, "").replace(/no\.\s+,\s*/g, "").replace(/pp\.\s+\./g, "").replace(/,\s*,/g, ",").replace(/\s{2,}/g, " ");
+
   // Append DOI for MLA 9th and IEEE
   if ((isMLA || isIEEE) && ref.doi) {
     result += ` doi:${ref.doi}.`;
