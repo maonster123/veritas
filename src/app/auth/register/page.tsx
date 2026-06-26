@@ -1,11 +1,8 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState } from "react";
 import { registerUser } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-
-const Spline = dynamic(() => import("@splinetool/react-spline/next"), { ssr: false });
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -23,13 +20,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: "#0b1121" }}>
-      <div className="absolute inset-0 z-0">
-        <Suspense fallback={<div className="absolute inset-0 bg-gradient-to-br from-[#0b1121] via-[#131b33] to-[#0f172a]" />}>
-          <Spline scene="https://prod.spline.design/f2oG6hIajWVTZDZL/scene.splinecode" className="w-full h-full" />
-        </Suspense>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0b1121 0%, #131b33 50%, #0f172a 100%)" }}>
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-float-slow" />
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl animate-float-medium" />
+        <div className="absolute top-2/3 left-1/2 w-64 h-64 bg-violet-500/15 rounded-full blur-3xl animate-float-fast" />
       </div>
-      <div className="absolute inset-0 z-[1] bg-gradient-to-b from-transparent to-[#0b1121]/50 pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md mx-auto px-6">
         <div className="glass-card rounded-2xl p-8 space-y-6">
