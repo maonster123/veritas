@@ -137,6 +137,7 @@ const IEEE_JOURNAL_ABBRS: Record<string, string> = {
   "Nature": "Nature",
   "Proceedings of the National Academy of Sciences": "Proc. Natl. Acad. Sci.",
   "PLOS ONE": "PLOS ONE",
+  "Journal of Behavioral Addictions": "J. Behav. Addict.",
   "Frontiers in Public Health": "Front. Public Health",
   "Frontiers in Psychology": "Front. Psychol.",
   "Frontiers in Psychiatry": "Front. Psychiatry",

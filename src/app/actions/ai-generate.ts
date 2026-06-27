@@ -316,10 +316,8 @@ export async function normalizeCitation(
         });
 
         if (style && resolved) {
-          // IEEE uses abbreviated journal name if available
-          const journalName = targetFormat === "IEEE" && resolved.shortJournal
-            ? resolved.shortJournal
-            : resolved.journal;
+          // Use full journal name — abbreviation handled by citation formatter
+          const journalName = resolved.journal;
 
           const refData = {
             id: "norm",
