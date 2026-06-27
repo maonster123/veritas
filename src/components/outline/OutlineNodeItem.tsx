@@ -78,7 +78,7 @@ export default function OutlineNodeItem({ node, depth, selectedId, onSelect, onD
           </span>
         )}
 
-        <div style={{ display: "none", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 4 }} className="group-hover:flex">
+        <div className="hidden group-hover:flex items-center gap-1 shrink-0 ml-1">
           {allowedChildTypes.length > 0 && (
             <button onClick={e => { e.stopPropagation(); setShowAdd(!showAdd); }}
               style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "var(--text-tertiary)", borderRadius: 4 }}
