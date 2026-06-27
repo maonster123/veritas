@@ -491,7 +491,7 @@ function NormTab({ node, hasApiKey, lang }: { node: FlatNode; hasApiKey: boolean
           className="text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1"
         >
           {(lang === "zh"
-            ? ["GB/T 7714", "APA 7th"]
+            ? ["GB/T 7714"]
             : ["APA 7th", "MLA 9th", "IEEE", "NLM"]
           ).map(f => (
             <option key={f} value={f}>{f}</option>
