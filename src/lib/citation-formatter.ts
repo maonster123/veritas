@@ -160,13 +160,36 @@ const MLA_LOWERCASE = new Set([
 ]);
 
 function toSentenceCase(title: string): string {
-  // Capitalize first word and first word after colon, lowercase rest
+  // Detect proper nouns: words already capitalized in original that are not first word
+  const origWords = title.split(/\s+/);
+  const properNouns = new Set<string>();
+  for (let i = 1; i < origWords.length; i++) {
+    const w = origWords[i];
+    // Skip words after colons (they should be capitalized anyway)
+    if (i > 0 && origWords[i - 1].endsWith(":")) continue;
+    // If a word is fully uppercase or has mixed case, treat as proper noun
+    if (w.length > 1 && w === w.toUpperCase()) { properNouns.add(w.toLowerCase()); continue; }
+    // Check if the word has any uppercase beyond first letter (mixed case like "iPhone")
+    if (w.slice(1) !== w.slice(1).toLowerCase()) { properNouns.add(w.toLowerCase()); continue; }
+    // Words with 3+ chars where first letter is uppercase → likely proper noun
+    if (w.length >= 3 && w[0] === w[0].toUpperCase() && w[0] !== w[0].toLowerCase()) {
+      properNouns.add(w.toLowerCase());
+    }
+  }
+
   return title.replace(/[^:]+/g, (part, offset) => {
     const trimmed = part.trimStart();
     const leadingSpace = part.slice(0, part.length - trimmed.length);
     const first = trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
     return offset === 0 ? first : leadingSpace + first;
-  });
+  }).split(/\s+/).map((w, i, arr) => {
+    // Preserve proper nouns
+    const lower = w.replace(/[^a-zA-Z]/g, "").toLowerCase();
+    if (properNouns.has(lower) && i > 0 && !arr[i - 1].endsWith(":")) {
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    }
+    return w;
+  }).join(" ");
 }
 
 function toTitleCase(title: string): string {
