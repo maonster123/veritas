@@ -53,11 +53,15 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
     (e: React.DragEvent, targetId: string) => {
       e.preventDefault();
       const dragId = e.dataTransfer.getData("text/plain");
-      if (dragId && dragId !== targetId) {
-        handleMove(dragId, targetId, 0);
+      if (!dragId || dragId === targetId) return;
+      // Move as sibling after the target (same parent, sortOrder after)
+      const flat = flattenTree(state.tree);
+      const targetNode = flat.find(n => n.id === targetId);
+      if (targetNode) {
+        handleMove(dragId, targetNode.parentId ?? null, targetNode.sortOrder + 1);
       }
     },
-    [handleMove]
+    [handleMove, state.tree]
   );
 
   const sidebarW = "w-[288px]";
