@@ -157,7 +157,36 @@ export async function recommendResources(
 
     if (items.length === 0) return { success: false, error: "未找到相关文献" };
 
-    const resources: ResourceItem[] = items.slice(0, 5).map((item: any) => {
+    const resources: ResourceItem[] = [];
+
+    // For Chinese mode: add domestic search links first
+    if (!isEnglish) {
+      const zhQuery = encodeURIComponent(searchTerms);
+      resources.push({
+        name: "中国知网 (CNKI)",
+        url: `https://kns.cnki.net/kns8s/search?classid=VDNJYZVH&kw=${zhQuery}`,
+        description: "中文学位论文与期刊文章 — 国内可直接访问",
+        needsVpn: false,
+        citation: "",
+      });
+      resources.push({
+        name: "万方数据",
+        url: `https://s.wanfangdata.com.cn/paper?q=${zhQuery}`,
+        description: "中文学术论文与会议文献 — 国内可直接访问",
+        needsVpn: false,
+        citation: "",
+      });
+      resources.push({
+        name: "百度学术",
+        url: `https://xueshu.baidu.com/s?wd=${zhQuery}`,
+        description: "中文文献综合搜索 — 国内可直接访问",
+        needsVpn: false,
+        citation: "",
+      });
+    }
+
+    // CrossRef papers (supplementary)
+    const crossRefResources = items.slice(0, isEnglish ? 5 : 2).map((item: any) => {
       const authors = (item.author ?? []).map((a: any) => `${a.family ?? ""} ${a.given ?? ""}`.trim()).join(", ");
       const title = item.title?.[0] ?? "Untitled";
       const journal = item["container-title"]?.[0] ?? "";
@@ -199,15 +228,20 @@ export async function recommendResources(
       };
     });
 
-    // Add platform search fallbacks for users without VPN access
+    // Add CrossRef papers to the list
+    resources.push(...crossRefResources);
+
+    // Platform search fallbacks
     const query = encodeURIComponent(searchTerms);
-    resources.push({
-      name: isEnglish ? "Google Scholar Search" : "Google Scholar 搜索",
-      url: `https://scholar.google.com/scholar?q=${query}`,
-      description: isEnglish ? "Free search across all disciplines — VPN required in China" : "全学科免费搜索 — 国内需VPN",
-      needsVpn: true,
-      citation: "",
-    });
+    if (isEnglish) {
+      resources.push({
+        name: "Google Scholar Search",
+        url: `https://scholar.google.com/scholar?q=${query}`,
+        description: "Free search across all disciplines — VPN required in China",
+        needsVpn: true,
+        citation: "",
+      });
+    }
     resources.push({
       name: isEnglish ? "PubMed Search" : "PubMed 搜索",
       url: `https://pubmed.ncbi.nlm.nih.gov/?term=${query}`,

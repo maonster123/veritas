@@ -59,11 +59,11 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
 
         {/* Aux tabs */}
         <div className="flex shrink-0" style={{ borderBottom: "1px solid var(--border-default)" }}>
-          <AuxTabButton active={activeAux === "notes"} onClick={() => setActiveAux("notes")}>Notes</AuxTabButton>
-          <AuxTabButton active={activeAux === "ai"} onClick={() => setActiveAux("ai")}>AI</AuxTabButton>
-          <AuxTabButton active={activeAux === "resources"} onClick={() => setActiveAux("resources")}>Resources</AuxTabButton>
-          <AuxTabButton active={activeAux === "chat"} onClick={() => setActiveAux("chat")}>Chat</AuxTabButton>
-          <AuxTabButton active={activeAux === "norm"} onClick={() => setActiveAux("norm")}>Cite</AuxTabButton>
+          <AuxTabButton active={activeAux === "notes"} onClick={() => setActiveAux("notes")}>{lang === "zh" ? "备注" : "Notes"}</AuxTabButton>
+          <AuxTabButton active={activeAux === "ai"} onClick={() => setActiveAux("ai")}>{lang === "zh" ? "AI推荐" : "AI"}</AuxTabButton>
+          <AuxTabButton active={activeAux === "resources"} onClick={() => setActiveAux("resources")}>{lang === "zh" ? "文献推荐" : "Resources"}</AuxTabButton>
+          <AuxTabButton active={activeAux === "chat"} onClick={() => setActiveAux("chat")}>{lang === "zh" ? "AI助手" : "Chat"}</AuxTabButton>
+          <AuxTabButton active={activeAux === "norm"} onClick={() => setActiveAux("norm")}>{lang === "zh" ? "引用规范" : "Cite"}</AuxTabButton>
         </div>
 
         {/* Aux content */}
@@ -85,7 +85,7 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
       {/* ── Right: Content (always visible) ── */}
       <div className="flex flex-col min-h-0 min-w-0" style={{ background: "var(--bg-root)" }}>
         <div className="flex items-center justify-between shrink-0" style={{ padding: "8px 24px", borderBottom: "1px solid var(--border-default)" }}>
-          <span className="heading-xs" style={{ color: "var(--text-secondary)" }}>Content</span>
+          <span className="heading-xs" style={{ color: "var(--text-secondary)" }}>{lang === "zh" ? "正文" : "Content"}</span>
           <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Markdown</span>
         </div>
         <div className="flex-1 overflow-y-auto" style={{ padding: 24 }}>

@@ -74,7 +74,7 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
 
         {/* Toolbar */}
         <div className="flex items-center justify-between px-[16px] py-[8px] border-b" style={{ borderColor: "var(--border-default)" }}>
-          <span className="heading-xs" style={{ color: "var(--text-secondary)" }}>Outline</span>
+          <span className="heading-xs" style={{ color: "var(--text-secondary)" }}>{currentLang === "zh" ? "大纲" : "Outline"}</span>
           <div className="flex items-center gap-[8px]">
             <button
               onClick={async () => { const nl = currentLang === "zh" ? "en" : "zh"; setCurrentLang(nl); await updateProjectLang(projectId, nl); }}
