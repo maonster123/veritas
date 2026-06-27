@@ -185,8 +185,11 @@ export async function recommendResources(
 
       const citation = `${authorStr}${extraAuthors} (${yearNum}). ${title}. ${journal}${volIssue || pagesStr ? `, ${[volIssue, pagesStr].filter(Boolean).join(", ")}` : ""}. ${doi ? `https://doi.org/${doi}` : url}`;
 
-      // VPN: Google-hosted or major platforms known to be blocked
-      const needsVpn = url.includes("doi.org") ? false : url.includes("google") || url.includes("scholar");
+      // VPN: paywalled journals generally require VPN in China
+      // Common paywalled publishers: Elsevier, Springer, Wiley, Taylor & Francis, Sage, Oxford, Cambridge
+      const publisherName = item.publisher ?? "";
+      const isPaywalled = /elsevier|springer|wiley|taylor.*francis|sage|oxford|cambridge|nature|science|apa|ieee|acm/i.test(publisherName) || /elsevier|springer|wiley|tandfonline|sagepub|oup\.com|cambridge\.org|nature\.com/i.test(url);
+      const needsVpn = isPaywalled;
 
       return {
         name: title.length > 80 ? title.slice(0, 77) + "..." : title,
@@ -195,6 +198,23 @@ export async function recommendResources(
         needsVpn,
         citation,
       };
+    });
+
+    // Add platform search fallbacks for users without VPN access
+    const query = encodeURIComponent(searchTerms);
+    resources.push({
+      name: isEnglish ? "Google Scholar Search" : "Google Scholar 搜索",
+      url: `https://scholar.google.com/scholar?q=${query}`,
+      description: isEnglish ? "Free search across all disciplines — VPN required in China" : "全学科免费搜索 — 国内需VPN",
+      needsVpn: true,
+      citation: "",
+    });
+    resources.push({
+      name: isEnglish ? "PubMed Search" : "PubMed 搜索",
+      url: `https://pubmed.ncbi.nlm.nih.gov/?term=${query}`,
+      description: isEnglish ? "Biomedical literature — freely accessible" : "生物医学文献 — 国内可直接访问",
+      needsVpn: false,
+      citation: "",
     });
 
     return { success: true, resources };
