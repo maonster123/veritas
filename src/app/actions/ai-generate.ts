@@ -185,11 +185,10 @@ export async function recommendResources(
 
       const citation = `${authorStr}${extraAuthors} (${yearNum}). ${title}. ${journal}${volIssue || pagesStr ? `, ${[volIssue, pagesStr].filter(Boolean).join(", ")}` : ""}. ${doi ? `https://doi.org/${doi}` : url}`;
 
-      // VPN: paywalled journals generally require VPN in China
-      // Common paywalled publishers: Elsevier, Springer, Wiley, Taylor & Francis, Sage, Oxford, Cambridge
-      const publisherName = item.publisher ?? "";
-      const isPaywalled = /elsevier|springer|wiley|taylor.*francis|sage|oxford|cambridge|nature|science|apa|ieee|acm/i.test(publisherName) || /elsevier|springer|wiley|tandfonline|sagepub|oup\.com|cambridge\.org|nature\.com/i.test(url);
-      const needsVpn = isPaywalled;
+      // Most CrossRef papers link to paywalled publisher sites — assume VPN needed
+      // Only open-access platforms are freely accessible in China
+      const isOpenAccess = /arxiv|pubmed central|pmc|plos|frontiersin|mdpi|hindawi|biomed central/i.test(url + (item.publisher ?? ""));
+      const needsVpn = !isOpenAccess;
 
       return {
         name: title.length > 80 ? title.slice(0, 77) + "..." : title,
