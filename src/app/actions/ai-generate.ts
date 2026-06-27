@@ -167,7 +167,7 @@ export async function recommendResources(
       : `重要：为每个资源生成符合 ${citationFormat} 格式的规范引用，放在 "citation" 字段中。`;
 
     const systemPrompt = isEnglish
-      ? `You are an academic research assistant. Recommend 3-5 real academic resources relevant to the user's research topic.
+      ? `You are an academic research assistant. Recommend EXACTLY 5 real academic resources relevant to the user's research topic. You MUST include at least 1 VPN-required resource (Google Scholar, Google Books, etc.) and 1 freely accessible resource.
 
 CRITICAL URL RULES:
 1. ONLY generate search URLs on major platforms — NEVER guess specific article/journal/file URLs.
@@ -190,7 +190,7 @@ CRITICAL URL RULES:
 
 Return ONLY JSON array:
 [{"name":"...","url":"https://...","description":"...","needsVpn":true/false,"citation":"..."}]`
-      : `你是学术研究助手。推荐 3-5 个真实学术资源。
+      : `你是学术研究助手。必须推荐恰好 5 个真实学术资源。至少包含 1 个需要VPN的资源（Google Scholar、Google Books等）和 1 个国内可直接访问的资源。
 
 网址规则（极其重要）：
 1. 只能使用大平台的搜索链接，绝不猜测具体论文/期刊/文件链接。
@@ -264,16 +264,24 @@ Return ONLY JSON array:
       return { success: false, error: "未找到相关资源推荐" };
     }
 
-    // Validate URLs — filter out dead links
+    // Validate URLs — skip known platforms whose search URLs are always valid
+    const KNOWN_HOSTS = ["scholar.google.com", "pubmed.ncbi.nlm.nih.gov", "arxiv.org", "kns.cnki.net",
+      "s.wanfangdata.com.cn", "xueshu.baidu.com", "webofscience.com", "scopus.com",
+      "books.google.com", "sciencedirect.com", "jstor.org", "apa.org",
+      "cqvip.com", "doi.org", "springer.com", "wiley.com", "tandfonline.com", "sagepub.com"];
+    const skipValidation = (url: string) => KNOWN_HOSTS.some(h => url.includes(h));
+
     const valid: ResourceItem[] = [];
     for (const r of resources) {
-      try {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 5000);
-        const head = await fetch(r.url, { method: "HEAD", signal: ctrl.signal }).finally(() => clearTimeout(t));
-        if (head.ok) valid.push(r);
-      } catch {
-        // Dead URL — skip it
+      if (skipValidation(r.url)) {
+        valid.push(r);
+      } else {
+        try {
+          const ctrl = new AbortController();
+          const t = setTimeout(() => ctrl.abort(), 5000);
+          const head = await fetch(r.url, { method: "HEAD", signal: ctrl.signal }).finally(() => clearTimeout(t));
+          if (head.ok) valid.push(r);
+        } catch { /* skip dead URL */ }
       }
     }
 
