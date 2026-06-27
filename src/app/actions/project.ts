@@ -32,7 +32,7 @@ export async function createProject(
   });
 
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect(`/?projectId=${project.id}`);
 }
 
 export async function updateProjectLang(
