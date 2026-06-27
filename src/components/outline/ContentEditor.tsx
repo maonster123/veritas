@@ -329,18 +329,11 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
     setAdding(true);
     setAddError("");
 
-    // Extract DOI from pasted text
-    const doiMatch = raw.match(/10\.\d{4,}\/[^\s"')\]]+/i);
-    const doi = doiMatch ? doiMatch[0].replace(/[.,;]+$/, "") : null;
-
-    if (!doi) {
-      setAddError("未检测到 DOI。请粘贴包含 DOI 编号（如 10.1037/amp.61.4.271）的引用文本，或直接粘贴 DOI 编号。");
-      setAdding(false);
-      return;
-    }
-
     try {
-      const result = await lookupAndSaveDOI(node.projectId, doi);
+      // Try DOI lookup first if present, otherwise save as-is
+      const doiMatch = raw.match(/10\.\d{4,}\/[^\s"')\]]+/i);
+      const doi = doiMatch ? doiMatch[0].replace(/[.,;]+$/, "") : null;
+      const result = await lookupAndSaveDOI(node.projectId, doi || raw);
       if (result.success && result.reference) {
         await linkReference(node.id, result.reference.id);
         setDoiInput("");
@@ -348,7 +341,7 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
         setAddError("");
         onReload();
       } else {
-        setAddError(result.error ?? "添加失败，请检查 DOI 是否正确");
+        setAddError(result.error ?? "添加失败");
       }
     } catch {
       setAddError("网络错误，请重试");
@@ -416,13 +409,13 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
             </button>
           ) : (
             <div className="space-y-2">
-              <p className="text-[10px] text-zinc-400">粘贴 DOI 或含 DOI 的引用文本（自动提取）：</p>
+              <p className="text-[10px] text-zinc-400">粘贴引用文本或 DOI 添加文献到本章：</p>
               <div className="flex gap-2">
                 <input
                   value={doiInput}
                   onChange={e => { setDoiInput(e.target.value); setAddError(""); }}
                   onKeyDown={e => { if (e.key === "Enter") handleAddDoi(); }}
-                  placeholder="10.xxxx/xxxxx 或直接粘贴 PMID/PubMed 格式"
+                  placeholder="粘贴引用文本、DOI 或 PubMed 格式"
                   disabled={adding}
                   className="flex-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
