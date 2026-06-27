@@ -5,7 +5,7 @@ import type { FlatNode } from "@/lib/outline-utils";
 import { generateAIContent, recommendResources, normalizeCitation, saveDeepseekKey } from "@/app/actions/ai-generate";
 import { sendMessage, getChatHistory } from "@/app/actions/chat";
 import { unlinkReference, linkReference } from "@/app/actions/outline";
-import { lookupAndSaveDOI } from "@/app/actions/lookup-doi";
+import { lookupAndSaveDOI, saveSimpleReference } from "@/app/actions/lookup-doi";
 
 interface Props {
   node: FlatNode | null;
@@ -330,10 +330,12 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
     setAddError("");
 
     try {
-      // Try DOI lookup first if present, otherwise save as-is
       const doiMatch = raw.match(/10\.\d{4,}\/[^\s"')\]]+/i);
       const doi = doiMatch ? doiMatch[0].replace(/[.,;]+$/, "") : null;
-      const result = await lookupAndSaveDOI(node.projectId, doi || raw);
+      // Use CrossRef only if DOI found, otherwise save as plain text reference
+      const result = doi
+        ? await lookupAndSaveDOI(node.projectId, doi)
+        : await saveSimpleReference(node.projectId, raw);
       if (result.success && result.reference) {
         await linkReference(node.id, result.reference.id);
         setDoiInput("");

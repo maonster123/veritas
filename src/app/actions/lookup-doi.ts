@@ -4,6 +4,33 @@ import { auth } from "@/lib/auth";
 import { resolveDOI } from "@/lib/doi-resolver";
 import { prisma } from "@/lib/prisma";
 
+export async function saveSimpleReference(
+  projectId: string,
+  rawText: string
+): Promise<LookupResult> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: "请先登录" };
+    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { userId: true } });
+    if (!project || project.userId !== session.user.id) return { success: false, error: "无权操作" };
+
+    const reference = await prisma.reference.create({
+      data: {
+        projectId,
+        doi: null,
+        title: rawText.slice(0, 500),
+        authors: "[]",
+        year: null,
+      },
+      select: { id: true, title: true, authors: true, journal: true, year: true, doi: true },
+    });
+
+    return { success: true, reference };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "保存失败" };
+  }
+}
+
 export interface LookupResult {
   success: boolean;
   reference?: {
