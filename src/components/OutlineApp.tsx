@@ -60,10 +60,10 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
     [handleMove]
   );
 
-  const sidebarW = "w-[320px]";
+  const sidebarW = "w-[288px]";
 
   return (
-    <div className="flex h-screen max-w-[1200px] mx-auto" style={{ background: "var(--bg-root)" }}>
+    <div className="flex h-screen" style={{ background: "var(--bg-root)" }}>
       {/* Left: Outline sidebar */}
       <div className={`${sidebarW} shrink-0 flex flex-col border-r`} style={{ borderColor: "var(--border-default)", background: "var(--bg-surface)" }}>
         <ProjectTitleBar projectId={projectId} title={title} subtitle={subtitle} />

@@ -40,7 +40,7 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
   };
 
   return (
-    <div className="h-full grid grid-cols-[320px_1fr] min-h-0">
+    <div className="h-full grid grid-cols-[280px_1fr] min-h-0">
       {/* ── Left: Auxiliary panel (tabs) ── */}
       <div className="flex flex-col min-h-0" style={{ borderRight: "1px solid var(--border-default)", background: "var(--bg-surface)" }}>
         {/* Node header */}
