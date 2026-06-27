@@ -37,16 +37,16 @@ export default function OutlineNodeItem({ node, depth, selectedId, onSelect, onD
   const handleTitleSave = () => { if (title.trim() && title !== node.title) onUpdate(node.id, { title: title.trim() }); setEditTitle(false); };
 
   return (
-    <div>
+    <div style={{ marginBottom: 2 }}>
       <div
         draggable onDragStart={e => onDragStart(e, node.id)} onDragOver={onDragOver} onDrop={e => { e.preventDefault(); onDrop(e, node.id); }}
         onClick={() => onSelect(node.id)}
         className="flex items-center group"
         style={{
           marginLeft: depth * 16,
-          padding: "4px 8px",
+          padding: "8px 8px",
           borderRadius: 6,
-          cursor: "pointer",
+          cursor: "grab",
           background: isSelected ? "var(--brand-subtle)" : "transparent",
           border: isSelected ? "1px solid var(--brand)" : "1px solid transparent",
           transition: "all 0.1s ease",
@@ -54,6 +54,14 @@ export default function OutlineNodeItem({ node, depth, selectedId, onSelect, onD
         onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "var(--bg-hover)"; }}
         onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
       >
+        {/* Drag handle */}
+        <span
+          style={{ width: 16, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-tertiary)", fontSize: 10, flexShrink: 0, cursor: "grab", marginRight: 2 }}
+          title="拖拽排序"
+          onMouseDown={e => e.stopPropagation()}
+        >
+          ⋮⋮
+        </span>
         <button onClick={e => { e.stopPropagation(); setExpanded(!expanded); }}
           style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-tertiary)", fontSize: 10, flexShrink: 0 }}>
           {hasChildren ? (expanded ? "▾" : "▸") : "◦"}
