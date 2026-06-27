@@ -88,14 +88,14 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
           <span className="heading-xs" style={{ color: "var(--text-secondary)" }}>Content</span>
           <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Markdown</span>
         </div>
-        <div className="flex-1 flex justify-center overflow-y-auto" style={{ padding: 24 }}>
+        <div className="flex-1 overflow-y-auto" style={{ padding: 24 }}>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onBlur={saveContent}
             placeholder="Start writing..."
-            className="resize-none"
-            style={{ width: "100%", maxWidth: 1120, background: "transparent", border: "none", outline: "none", fontSize: 16, lineHeight: 1.6, color: "var(--text-primary)", fontFamily: "system-ui, sans-serif", height: "100%" }}
+            className="w-full min-h-[400px] resize-none"
+            style={{ background: "transparent", border: "none", outline: "none", fontSize: 16, lineHeight: 1.6, color: "var(--text-primary)", fontFamily: "system-ui, sans-serif", height: "calc(100% - 48px)" }}
           />
         </div>
         <RefSection node={node} onReload={onReload} />
