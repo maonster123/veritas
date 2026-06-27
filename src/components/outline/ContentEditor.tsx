@@ -238,6 +238,9 @@ function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean 
       {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
       {resources.length > 0 && (
         <div className="flex-1 space-y-2 overflow-y-auto" style={{ overflowX: "hidden", wordBreak: "break-word" }}>
+          <div className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-center">
+            ⚠ Some websites may require VPN to access from China
+          </div>
           {resources.map((r, i) => (
             <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-emerald-400 transition-colors group">
               <div className="flex items-start justify-between gap-2">
@@ -263,7 +266,6 @@ function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean 
                     </div>
                   )}
                 </div>
-                {r.needsVpn && <span className="shrink-0 text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 rounded">⚠ 需VPN</span>}
               </div>
             </a>
           ))}
