@@ -67,7 +67,7 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
         </div>
 
         {/* Aux content */}
-        <div className="flex-1 overflow-hidden" style={{ padding: 16, wordBreak: "break-word", overflowWrap: "anywhere" }}>
+        <div className="flex-1 overflow-y-auto" style={{ padding: 16, wordBreak: "break-word", overflowWrap: "anywhere" }}>
           {activeAux === "notes" ? (
             <NotesPanel notes={notes} setNotes={setNotes} saveNotes={() => onUpdate(node.id, { notes })} />
           ) : activeAux === "ai" ? (
