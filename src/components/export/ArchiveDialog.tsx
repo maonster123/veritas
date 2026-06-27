@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { listProjects } from "@/app/actions/project";
+import { listProjects, deleteProject } from "@/app/actions/project";
 
 interface Props {
   isZh: boolean;
@@ -12,12 +12,21 @@ export default function ArchiveDialog({ isZh, onClose }: Props) {
   const [projects, setProjects] = useState<{ id: string; title: string; subtitle: string | null; lang: string; updatedAt: Date }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = () => {
     listProjects().then(r => {
       if (r.success && r.projects) setProjects(r.projects);
       setLoading(false);
     });
-  }, []);
+  };
+  useEffect(load, []);
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm(isZh ? "确定删除此项目？" : "Delete this project?")) return;
+    await deleteProject(id);
+    load();
+  };
 
   const t = {
     title: isZh ? "存档" : "Archive",
@@ -50,9 +59,16 @@ export default function ArchiveDialog({ isZh, onClose }: Props) {
                     {p.subtitle && <p className="text-xs text-zinc-500 mt-0.5 truncate">{p.subtitle}</p>}
                     <p className="text-[10px] text-zinc-400 mt-1">{t.updated}: {new Date(p.updatedAt).toLocaleDateString()}</p>
                   </div>
-                  <span className="shrink-0 text-[10px] px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
-                    {p.lang === "zh" ? t.cn : t.en}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                      {p.lang === "zh" ? t.cn : t.en}
+                    </span>
+                    <button onClick={(e) => handleDelete(p.id, e)}
+                      className="text-[10px] px-2 py-0.5 rounded text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+                      title={isZh ? "删除" : "Delete"}>
+                      ✕
+                    </button>
+                  </div>
                 </div>
               </a>
             ))

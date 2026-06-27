@@ -70,6 +70,35 @@ export async function listProjects(): Promise<{ success: boolean; projects?: { i
   }
 }
 
+export async function deleteProject(
+  projectId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: "请先登录" };
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { userId: true },
+    });
+    if (!project || project.userId !== session.user.id) return { success: false, error: "无权操作" };
+
+    // Clean up related data
+    await prisma.chatMessage.deleteMany({ where: { node: { projectId } } });
+    await prisma.outlineReference.deleteMany({ where: { outlineNode: { projectId } } });
+    await prisma.outlineNode.deleteMany({ where: { projectId } });
+    await prisma.reference.deleteMany({ where: { projectId } });
+    await prisma.projectCitationStyle.deleteMany({ where: { projectId } });
+    await prisma.formatRule.deleteMany({ where: { projectId } });
+    await prisma.project.delete({ where: { id: projectId } });
+
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "删除失败" };
+  }
+}
+
 export async function updateProject(
   projectId: string,
   data: { title?: string; subtitle?: string; keywords?: string | null; titlePage?: string | null }
