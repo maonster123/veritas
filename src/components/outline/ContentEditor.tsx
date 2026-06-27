@@ -515,21 +515,36 @@ function NormTab({ node, hasApiKey, lang }: { node: FlatNode; hasApiKey: boolean
       {error && <p className="text-red-500 text-xs shrink-0">{error}</p>}
 
       {result && (
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex items-center justify-between mb-1 shrink-0">
+        <div className="flex-1 flex flex-col min-h-0 space-y-2">
+          <div className="flex items-center justify-between shrink-0">
             <span className="text-[10px] text-zinc-400">{targetFormat} 格式</span>
             <button onClick={handleCopy} className="text-[10px] px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded hover:bg-blue-100 hover:text-blue-600">
               {copied ? "已复制" : "复制"}
             </button>
           </div>
-          <div className="flex-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded p-3 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed overflow-y-auto select-all">
+          <div className="flex-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded p-3 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed overflow-y-auto select-all" style={{ wordBreak: "break-word" }}>
             {result}
+          </div>
+          {/* Template reference */}
+          <div className="shrink-0 bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-lg p-3">
+            <p className="text-[10px] text-zinc-400 mb-2 font-medium">{targetFormat} Journal Article Template</p>
+            <p className="text-[10px] text-zinc-500 dark:text-zinc-500 leading-relaxed" style={{ wordBreak: "break-word" }}>
+              {TEMPLATES[targetFormat] ?? "Select a format"}
+            </p>
           </div>
         </div>
       )}
     </div>
   );
 }
+
+const TEMPLATES: Record<string, string> = {
+  "APA 7th": "Author, A. A., & Author, B. B. (Year). Title of article in sentence case. Journal Name in Title Case, Volume(Issue), Pages. https://doi.org/xx.xxx/xxxx",
+  "MLA 9th": "Author, First M., and First M. Author. \"Title of Article in Title Case.\" Journal Name in Title Case, vol. X, no. X, Year, pp. XX-XX. doi:xx.xxx/xxxx.",
+  "IEEE": "A. A. Author and B. B. Author, \"Title of article in title case,\" Abbrev. Journal Name, vol. X, no. X, pp. XX-XX, Year. doi:xx.xxx/xxxx.",
+  "NLM": "Author AA, Author BB. Title of article in sentence case. Abbrev J Name. Year;Vol(Issue):Pages. doi:xx.xxx/xxxx.",
+  "GB/T 7714": "作者. 文章标题[J]. 期刊名, 年份, 卷(期): 页码.",
+};
 
 // ── Chat Tab ──
 
