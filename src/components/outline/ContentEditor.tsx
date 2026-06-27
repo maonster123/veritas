@@ -94,8 +94,8 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
             onChange={(e) => setContent(e.target.value)}
             onBlur={saveContent}
             placeholder="Start writing..."
-            className="w-full resize-none"
-            style={{ maxWidth: 560, background: "transparent", border: "none", outline: "none", fontSize: 16, lineHeight: 1.6, color: "var(--text-primary)", fontFamily: "system-ui, sans-serif", height: "100%" }}
+            className="resize-none"
+            style={{ width: "100%", maxWidth: 1120, background: "transparent", border: "none", outline: "none", fontSize: 16, lineHeight: 1.6, color: "var(--text-primary)", fontFamily: "system-ui, sans-serif", height: "100%" }}
           />
         </div>
         <RefSection node={node} onReload={onReload} />
