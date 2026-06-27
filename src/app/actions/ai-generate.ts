@@ -267,9 +267,9 @@ export async function normalizeCitation(
     const session = await auth();
     if (!session?.user?.id) return { success: false, error: "请先登录" };
 
-    // ── Step 1: Try DOI lookup ──
+    // ── Step 1: Try DOI lookup (skip for Chinese mode — CNKI/万方 DOIs not on CrossRef) ──
     const doiMatch = rawText.match(/10\.\d{4,}\/[^\s"')\]]+/);
-    const doi = doiMatch ? doiMatch[0].replace(/[.,;]+$/, "") : null;
+    const doi = (lang !== "zh" && doiMatch) ? doiMatch[0].replace(/[.,;]+$/, "") : null;
 
     if (doi) {
       // Resolve DOI to get accurate metadata via CrossRef
