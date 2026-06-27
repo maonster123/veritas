@@ -128,26 +128,10 @@ export async function recommendResources(
     const session = await auth();
     if (!session?.user?.id) return { success: false, error: "请先登录" };
 
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { deepseekApiKey: true },
-    });
-    if (!currentUser?.deepseekApiKey) {
-      return { success: false, error: "MISSING_KEY" };
-    }
-
     const node = await prisma.outlineNode.findUnique({
       where: { id: nodeId },
       include: {
-        project: {
-          select: {
-            userId: true, title: true, subtitle: true, lang: true,
-            citationStyles: {
-              where: { isActive: true },
-              include: { citationStyle: { select: { name: true } } },
-            },
-          },
-        },
+        project: { select: { userId: true, title: true, lang: true } },
         parent: { select: { title: true } },
       },
     });
@@ -155,145 +139,66 @@ export async function recommendResources(
     if (node.project.userId !== session.user.id) return { success: false, error: "无权操作" };
 
     const isEnglish = node.project.lang === "en";
-    const thesisTitle = node.project.title + (node.project.subtitle ? ` — ${node.project.subtitle}` : "");
-    const chapter = node.parent?.title ?? "";
 
-    // Determine citation format
-    const activeStyle = node.project.citationStyles[0]?.citationStyle;
-    const citationFormat = activeStyle?.name ?? (isEnglish ? "APA 7th" : "GB/T 7714");
+    // Build search query from node title + chapter + thesis title
+    const searchTerms = [node.title, node.parent?.title ?? "", node.project.title]
+      .filter(Boolean).join(" ").replace(/[^a-zA-Z0-9\s-]/g, " ").trim();
 
-    const citationRule = isEnglish
-      ? `IMPORTANT: For each resource, also generate a properly formatted citation in ${citationFormat} format. Include the citation as a "citation" field. For websites: use "Author/Organization. (Year). Title. Site Name. URL" or the ${citationFormat}-specific equivalent. If year is unknown, use "n.d.".`
-      : `重要：为每个资源生成符合 ${citationFormat} 格式的规范引用，放在 "citation" 字段中。`;
+    // Search CrossRef for real papers
+    const crossrefUrl = `https://api.crossref.org/works?query=${encodeURIComponent(searchTerms)}&rows=6&filter=type:journal-article&sort=relevance`;
+    const cfRes = await fetch(crossrefUrl, {
+      headers: { "User-Agent": "Veritas/1.0 (mailto:dev@localhost)" },
+    });
 
-    const systemPrompt = isEnglish
-      ? `You are an academic research assistant. Recommend EXACTLY 5 real academic resources relevant to the user's research topic. You MUST include at least 1 VPN-required resource (Google Scholar, Google Books, etc.) and 1 freely accessible resource.
+    if (!cfRes.ok) return { success: false, error: "CrossRef 搜索失败" };
 
-CRITICAL URL RULES:
-1. ONLY generate search URLs on major platforms — NEVER guess specific article/journal/file URLs.
-2. For each resource, use the platform's search URL with the user's topic as query.
-3. Valid platforms and their URL patterns:
-   - Google Scholar: https://scholar.google.com/scholar?q=KEYWORDS
-   - PubMed: https://pubmed.ncbi.nlm.nih.gov/?term=KEYWORDS
-   - arXiv: https://arxiv.org/search/?query=KEYWORDS&searchtype=all
-   - CNKI: https://kns.cnki.net/kns8s/search?classid=VDNJYZVH&kw=KEYWORDS
-   - Wanfang: https://s.wanfangdata.com.cn/paper?q=KEYWORDS
-   - Web of Science: https://www.webofscience.com/wos/woscc/basic-search (then user searches manually)
-   - Scopus: https://www.scopus.com/search/form.uri?display=basic (then user searches manually)
-   - Google Books: https://books.google.com/books?q=KEYWORDS
-   - ScienceDirect: https://www.sciencedirect.com/search?qs=KEYWORDS
-   - JSTOR: https://www.jstor.org/action/doBasicSearch?Query=KEYWORDS
-   - APA PsycINFO: https://www.apa.org/pubs/databases/psycinfo (resource homepage)
-4. NEVER invent any URL not on this list. If unsure, use Google Scholar.
-5. For each resource provide: name, URL, 1-sentence description on why it's relevant, VPN requirement, and citation.
-6. VPN: Google Scholar/Google Books → true. CNKI/Wanfang/PubMed/arXiv → false.
+    const cfData = await cfRes.json();
+    const items = cfData.message?.items ?? [];
 
-Return ONLY JSON array:
-[{"name":"...","url":"https://...","description":"...","needsVpn":true/false,"citation":"..."}]`
-      : `你是学术研究助手。必须推荐恰好 5 个真实学术资源。至少包含 1 个需要VPN的资源（Google Scholar、Google Books等）和 1 个国内可直接访问的资源。
+    if (items.length === 0) return { success: false, error: "未找到相关文献" };
 
-网址规则（极其重要）：
-1. 只能使用大平台的搜索链接，绝不猜测具体论文/期刊/文件链接。
-2. 每个资源用平台搜索URL + 用户关键词。
-3. 可用平台及URL格式：
-   - 知网：https://kns.cnki.net/kns8s/search?classid=VDNJYZVH&kw=关键词
-   - 万方：https://s.wanfangdata.com.cn/paper?q=关键词
-   - 百度学术：https://xueshu.baidu.com/s?wd=关键词
-   - Google Scholar：https://scholar.google.com/scholar?q=关键词
-   - PubMed：https://pubmed.ncbi.nlm.nih.gov/?term=关键词
-   - arXiv：https://arxiv.org/search/?query=关键词
-   - 维普：http://www.cqvip.com/QK/Search.aspx?key=关键词
-   - ScienceDirect：https://www.sciencedirect.com/search?qs=关键词
-4. 绝不编造不在列表中的网址。不确定就用百度学术或Google Scholar。
-5. 每个资源提供：名称、URL、一句话描述、VPN需求、规范引用。
-6. VPN：Google Scholar/Google Books → true。知网/万方/维普/百度学术/PubMed/arXiv → false。
+    const resources: ResourceItem[] = items.slice(0, 5).map((item: any) => {
+      const authors = (item.author ?? []).map((a: any) => `${a.family ?? ""} ${a.given ?? ""}`.trim()).join(", ");
+      const title = item.title?.[0] ?? "Untitled";
+      const journal = item["container-title"]?.[0] ?? "";
+      const year = item["published-print"]?.["date-parts"]?.[0]?.[0] ?? item.created?.["date-parts"]?.[0]?.[0] ?? "n.d.";
+      const doi = item.DOI ?? "";
+      const url = doi ? `https://doi.org/${doi}` : item.URL ?? "";
+      const vol = item.volume ?? "";
+      const issue = item.issue ?? "";
+      const pages = item.page ?? "";
 
-只返回JSON数组：
-[{"name":"...","url":"https://...","description":"...","needsVpn":true/false,"citation":"..."}]`;
+      // Build APA-style citation
+      const authorList = (item.author ?? []).slice(0, 5).map((a: any) => {
+        const family = a.family ?? "";
+        const initials = (a.given ?? "").split(/\s+/).map((w: string) => (w[0] ?? "").toUpperCase() + ".").join(" ");
+        return `${family}, ${initials}`;
+      });
+      const authorStr = authorList.length === 1 ? authorList[0]
+        : authorList.length === 2 ? `${authorList[0]}, & ${authorList[1]}`
+        : authorList.length > 2 ? `${authorList.slice(0, -1).join(", ")}, & ${authorList[authorList.length - 1]}`
+        : "(n.d.)";
+      const extraAuthors = (item.author ?? []).length > 5 ? " et al." : "";
+      const volIssue = vol ? (issue ? `${vol}(${issue})` : vol) : "";
+      const pagesStr = pages || "";
+      const yearNum = typeof year === "number" ? year : (parseInt(String(year)) || year);
 
-    const userPrompt = isEnglish
-      ? `Thesis: "${thesisTitle}". Section: "${node.title}" (under ${chapter}). Content: ${node.content ? node.content.slice(0, 800) : "(none)"}. Recommend 3-5 academic resources using major platform search URLs with relevant keywords. Return only JSON array.`
-      : `论文：「${thesisTitle}」。章节：「${node.title}」（${chapter}）。内容：${node.content ? node.content.slice(0, 800) : "（无）"}。推荐3-5个学术资源，用大平台搜索链接+相关关键词。只返回JSON数组。`;
+      const citation = `${authorStr}${extraAuthors} (${yearNum}). ${title}. ${journal}${volIssue || pagesStr ? `, ${[volIssue, pagesStr].filter(Boolean).join(", ")}` : ""}. ${doi ? `https://doi.org/${doi}` : url}`;
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+      // VPN: Google-hosted or major platforms known to be blocked
+      const needsVpn = url.includes("doi.org") ? false : url.includes("google") || url.includes("scholar");
 
-    const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${currentUser.deepseekApiKey}`,
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.3,
-        max_tokens: 2048,
-        response_format: { type: "json_object" },
-      }),
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeout));
+      return {
+        name: title.length > 80 ? title.slice(0, 77) + "..." : title,
+        url: url || `https://doi.org/${doi}`,
+        description: `${journal} (${year})${authors ? ` — ${authors.split(",")[0]}` : ""}`,
+        needsVpn,
+        citation,
+      };
+    });
 
-    if (!res.ok) {
-      return { success: false, error: `API 错误 ${res.status}` };
-    }
-
-    const data = await res.json();
-    const text = data.choices?.[0]?.message?.content;
-    if (!text) return { success: false, error: "AI 返回为空" };
-
-    // Parse JSON — DeepSeek may wrap it in an object or return a bare array
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      return { success: false, error: "AI 返回格式异常，请重试" };
-    }
-
-    // Handle both { "resources": [...] } and [...] formats
-    const resources: ResourceItem[] = Array.isArray(parsed)
-      ? parsed
-      : (parsed as Record<string, unknown>).resources && Array.isArray((parsed as Record<string, unknown>).resources)
-        ? (parsed as Record<string, unknown>).resources as ResourceItem[]
-        : [];
-
-    if (resources.length === 0) {
-      return { success: false, error: "未找到相关资源推荐" };
-    }
-
-    // Validate URLs — skip known platforms whose search URLs are always valid
-    const KNOWN_HOSTS = ["scholar.google.com", "pubmed.ncbi.nlm.nih.gov", "arxiv.org", "kns.cnki.net",
-      "s.wanfangdata.com.cn", "xueshu.baidu.com", "webofscience.com", "scopus.com",
-      "books.google.com", "sciencedirect.com", "jstor.org", "apa.org",
-      "cqvip.com", "doi.org", "springer.com", "wiley.com", "tandfonline.com", "sagepub.com"];
-    const skipValidation = (url: string) => KNOWN_HOSTS.some(h => url.includes(h));
-
-    const valid: ResourceItem[] = [];
-    for (const r of resources) {
-      if (skipValidation(r.url)) {
-        valid.push(r);
-      } else {
-        try {
-          const ctrl = new AbortController();
-          const t = setTimeout(() => ctrl.abort(), 5000);
-          const head = await fetch(r.url, { method: "HEAD", signal: ctrl.signal }).finally(() => clearTimeout(t));
-          if (head.ok) valid.push(r);
-        } catch { /* skip dead URL */ }
-      }
-    }
-
-    if (valid.length === 0) {
-      return { success: false, error: "AI 推荐的网址均无法访问，请重试" };
-    }
-
-    return { success: true, resources: valid };
+    return { success: true, resources };
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      return { success: false, error: "请求超时" };
-    }
     return { success: false, error: error instanceof Error ? error.message : "未知错误" };
   }
 }
