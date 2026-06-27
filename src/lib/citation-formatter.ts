@@ -143,6 +143,7 @@ const IEEE_JOURNAL_ABBRS: Record<string, string> = {
   "Frontiers in Psychiatry": "Front. Psychiatry",
   "Frontiers in Neuroscience": "Front. Neurosci.",
   "Saudi Journal of Biological Sciences": "Saudi J. Biol. Sci.",
+  "Advances in Medical Education and Practice": "Adv. Med. Educ. Pract.",
 };
 
 function abbreviateJournal(name: string): string {
