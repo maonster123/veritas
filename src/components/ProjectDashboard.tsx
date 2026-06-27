@@ -3,13 +3,22 @@
 import { useState } from "react";
 import CreateProjectForm from "@/components/CreateProjectForm";
 import { signOut } from "next-auth/react";
+import { deleteProject } from "@/app/actions/project";
 
 interface Props {
   projects: { id: string; title: string; subtitle: string | null; lang: string; updatedAt: Date }[];
 }
 
-export default function ProjectDashboard({ projects }: Props) {
+export default function ProjectDashboard({ projects: initialProjects }: Props) {
   const [showNew, setShowNew] = useState(false);
+  const [projects, setProjects] = useState(initialProjects);
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!confirm("Delete this project?")) return;
+    await deleteProject(id);
+    setProjects(prev => prev.filter(p => p.id !== id));
+  };
 
   if (showNew) return <CreateProjectForm />;
 
@@ -38,9 +47,16 @@ export default function ProjectDashboard({ projects }: Props) {
                       <h4 className="text-sm font-medium text-white truncate">{p.title}</h4>
                       {p.subtitle && <p className="text-xs text-slate-500 truncate">{p.subtitle}</p>}
                     </div>
-                    <span className="shrink-0 text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-400">
-                      {p.lang === "zh" ? "CN" : "EN"}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-400">
+                        {p.lang === "zh" ? "CN" : "EN"}
+                      </span>
+                      <button onClick={(e) => handleDelete(p.id, e)}
+                        className="text-[10px] px-1.5 py-0.5 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                        title="Delete">
+                        ✕
+                      </button>
+                    </div>
                   </div>
                 </a>
               ))}
