@@ -83,7 +83,7 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
               {currentLang === "zh" ? "中" : "EN"}
             </button>
             <button onClick={() => setShowExportDialog(true)} className="btn btn-primary" style={{ height: 32, fontSize: 12, padding: "0 12px" }}>
-              Export
+              {currentLang === "zh" ? "导出" : "Export"}
             </button>
             <button onClick={() => signOut({ callbackUrl: "/auth/login" })} className="btn btn-ghost" style={{ height: 32, fontSize: 12, padding: "0 8px" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round"/></svg>
