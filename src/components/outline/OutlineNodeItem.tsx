@@ -47,12 +47,10 @@ export default function OutlineNodeItem({ node, depth, selectedId, onSelect, onD
           padding: "4px 8px",
           borderRadius: 6,
           cursor: "pointer",
-          background: isSelected ? "var(--brand-subtle)" : "transparent",
+          background: "var(--brand-subtle)",
           border: isSelected ? "1px solid var(--brand)" : "1px solid transparent",
           transition: "all 0.1s ease",
         }}
-        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "var(--bg-hover)"; }}
-        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
       >
         <button onClick={e => { e.stopPropagation(); setExpanded(!expanded); }}
           style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-tertiary)", fontSize: 10, flexShrink: 0 }}>
@@ -72,7 +70,7 @@ export default function OutlineNodeItem({ node, depth, selectedId, onSelect, onD
             onClick={e => e.stopPropagation()}
             className="input-field" style={{ flex: 1, marginLeft: 8, height: 28, fontSize: 14 }} />
         ) : (
-          <span style={{ flex: 1, marginLeft: 8, fontSize: 14, color: isSelected ? "var(--brand)" : "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          <span style={{ flex: 1, marginLeft: 8, fontSize: 14, color: "var(--text-primary)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
             onDoubleClick={() => setEditTitle(true)}>
             {node.title}
           </span>
