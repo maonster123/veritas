@@ -337,10 +337,11 @@ export function formatReferenceEntry(
     result += ".";
     if (doi) result += ` doi:${ref.doi}.`;
   } else {
-    // GB/T 7714 & others: Authors. Title[J]. Journal, Year, Volume(Issue): Pages.
+    // GB/T 7714 & others: [N] Authors. Title[J]. Journal, Year, Volume(Issue): Pages.
     const volIssue = V ? (I ? `${V}(${I})` : V) : "";
     const pages = P ? `: ${P}` : "";
-    result = `${vars.authors}. ${vars.title}[J]. ${vars.journal}, ${Y}, ${volIssue}${pages}.`;
+    const num = style.formatType === "numeric" && !style.name.startsWith("IEEE") ? `[${index}] ` : "";
+    result = `${num}${vars.authors}. ${vars.title}[J]. ${vars.journal}, ${Y}, ${volIssue}${pages}.`;
   }
 
   return result;
