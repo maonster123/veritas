@@ -172,10 +172,17 @@ function toTitleCase(title: string): string {
   if (words.length === 0) return title;
 
   const last = words.length - 1;
+
+  // Find words that come after a colon (they should be capitalized like first words)
+  const afterColon = new Set<number>();
+  for (let i = 1; i < words.length; i++) {
+    if (words[i - 1].endsWith(":")) afterColon.add(i);
+  }
+
   return words
     .map((w, i) => {
-      // Always capitalize first and last word
-      if (i === 0 || i === last) {
+      // Always capitalize first, last, and words after colon
+      if (i === 0 || i === last || afterColon.has(i)) {
         return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
       }
       // Keep lowercase for minor words
