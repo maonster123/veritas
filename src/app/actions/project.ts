@@ -55,6 +55,21 @@ export async function updateProjectLang(
   return { success: true };
 }
 
+export async function listProjects(): Promise<{ success: boolean; projects?: { id: string; title: string; subtitle: string | null; lang: string; updatedAt: Date }[]; error?: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: "请先登录" };
+    const projects = await prisma.project.findMany({
+      where: { userId: session.user.id },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, title: true, subtitle: true, lang: true, updatedAt: true },
+    });
+    return { success: true, projects };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "加载失败" };
+  }
+}
+
 export async function updateProject(
   projectId: string,
   data: { title?: string; subtitle?: string; keywords?: string | null; titlePage?: string | null }

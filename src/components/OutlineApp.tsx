@@ -9,6 +9,7 @@ import { flattenTree } from "@/lib/outline-utils";
 import { signOut } from "next-auth/react";
 import { updateProjectLang } from "@/app/actions/project";
 import ExportDialog from "@/components/export/ExportDialog";
+import ArchiveDialog from "@/components/export/ArchiveDialog";
 
 interface OutlineAppProps {
   projectId: string;
@@ -37,6 +38,7 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
     : null;
 
   const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [currentLang, setCurrentLang] = useState(lang);
 
   const onDragStart = useCallback((e: React.DragEvent, id: string) => {
@@ -82,6 +84,9 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
             >
               {currentLang === "zh" ? "中" : "EN"}
             </button>
+            <button onClick={() => setShowArchiveDialog(true)} className="btn btn-ghost" style={{ height: 32, fontSize: 12, padding: "0 8px" }}>
+              {currentLang === "zh" ? "存档" : "Archive"}
+            </button>
             <button onClick={() => setShowExportDialog(true)} className="btn btn-primary" style={{ height: 32, fontSize: 12, padding: "0 12px" }}>
               {currentLang === "zh" ? "导出" : "Export"}
             </button>
@@ -115,6 +120,10 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
       <div className="flex-1 min-w-0 min-h-0">
         <ContentEditor node={selectedNode} onUpdate={handleUpdate} onReload={loadTree} hasApiKey={hasApiKey} lang={currentLang} />
       </div>
+
+      {showArchiveDialog && (
+        <ArchiveDialog isZh={currentLang === "zh"} onClose={() => setShowArchiveDialog(false)} />
+      )}
 
       {showExportDialog && (
         <ExportDialog
