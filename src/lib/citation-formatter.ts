@@ -181,16 +181,17 @@ function toTitleCase(title: string): string {
 
   return words
     .map((w, i) => {
+      // Capitalize hyphenated parts
+      const parts = w.split("-");
+      const capitalized = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join("-");
+
       // Always capitalize first, last, and words after colon
-      if (i === 0 || i === last || afterColon.has(i)) {
-        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-      }
-      // Keep lowercase for minor words
+      if (i === 0 || i === last || afterColon.has(i)) return capitalized;
+      // Keep lowercase for minor words (but keep hyphenated capitalization)
       if (MLA_LOWERCASE.has(w.toLowerCase())) {
-        return w.toLowerCase();
+        return parts.map(p => p.toLowerCase()).join("-");
       }
-      // Capitalize all other words
-      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      return capitalized;
     })
     .join(" ");
 }
