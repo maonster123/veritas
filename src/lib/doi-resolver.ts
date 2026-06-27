@@ -70,7 +70,7 @@ async function fetchCrossRef(doi: string): Promise<ResolvedReference | null> {
     authors: parseAuthors(work),
     journal: work["container-title"]?.[0] ?? null,
     shortJournal: work["short-container-title"]?.[0] ?? null,
-    volume: work.volume ?? null,
+    volume: (work.volume ?? "").replace(/^Volume\s+/i, "") || null,
     issue: work.issue ?? null,
     pages: work.page ?? null,
     year: pickYear(work),
