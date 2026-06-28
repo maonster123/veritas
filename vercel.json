@@ -1,4 +1,9 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npx prisma generate && next build"
+  "buildCommand": "npx prisma generate && next build",
+  "functions": {
+    "src/app/api/**/*": {
+      "runtime": "nodejs20.x"
+    }
+  }
 }
