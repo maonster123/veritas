@@ -49,15 +49,6 @@ export default function ExportDialog({ projectId, title, keywords, titlePage, is
     onClose();
   };
 
-  const handleExportPdf = async () => {
-    await save();
-    const res = await fetch(`/api/export/save-pdf?projectId=${projectId}`);
-    const data = await res.json();
-    if (data.success) alert(`${isEnglish ? "Saved to Desktop:" : "已保存到桌面："} ${data.path}`);
-    else alert(data.error ?? "Failed");
-    onClose();
-  };
-
   const handlePreview = () => {
     save().then(() => window.open(`/export?projectId=${projectId}`, "_blank"));
   };
@@ -112,7 +103,6 @@ export default function ExportDialog({ projectId, title, keywords, titlePage, is
           <span className="text-[10px] text-zinc-400">{saving ? "保存中..." : ""}</span>
           <div className="flex gap-2">
             <button onClick={handlePreview} className="text-xs px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded hover:bg-zinc-50 dark:hover:bg-zinc-800">{labels.preview}</button>
-            <button onClick={handleExportPdf} className="text-xs px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">{labels.exportPdf}</button>
             <button onClick={handleExportWord} className="text-xs px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">{labels.exportWord}</button>
           </div>
         </div>
