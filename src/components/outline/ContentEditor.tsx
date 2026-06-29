@@ -330,23 +330,26 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
     setAddError("");
 
     try {
+      // Try DOI lookup if present, fallback to plain text
       const doiMatch = raw.match(/10\.\d{4,}\/[^\s"')\]]+/i);
       const doi = doiMatch ? doiMatch[0].replace(/[.,;]+$/, "") : null;
-      // Use CrossRef only if DOI found, otherwise save as plain text reference
-      const result = doi
-        ? await lookupAndSaveDOI(node.projectId, doi)
-        : await saveSimpleReference(node.projectId, raw);
-      if (result.success && result.reference) {
+      let result;
+      if (doi) {
+        result = await lookupAndSaveDOI(node.projectId, doi);
+        // If already exists, still link it
+      }
+      if (!result?.success) {
+        result = await saveSimpleReference(node.projectId, raw);
+      }
+      if (result?.success && result.reference) {
         await linkReference(node.id, result.reference.id);
         setDoiInput("");
         setShowAdder(false);
         setAddError("");
         onReload();
-      } else {
-        setAddError(result.error ?? "添加失败");
       }
     } catch {
-      setAddError("网络错误，请重试");
+      setAddError("添加失败，请重试");
     }
     setAdding(false);
   };
