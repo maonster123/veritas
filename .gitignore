@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+dev.db
+*.zip
+*.tar.gz
+dev.db

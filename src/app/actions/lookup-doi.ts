@@ -63,10 +63,7 @@ export async function lookupAndSaveDOI(
       where: { projectId_doi: { projectId, doi } },
     });
     if (existing) {
-      return {
-        success: false,
-        error: "该 DOI 已存在于当前项目的文献库中",
-      };
+      return { success: true, reference: existing };
     }
 
     // Resolve DOI via CrossRef/DataCite
