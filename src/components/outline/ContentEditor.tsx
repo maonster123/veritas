@@ -504,13 +504,18 @@ function NormTab({ node, hasApiKey, lang }: { node: FlatNode; hasApiKey: boolean
         className="w-full h-32 bg-transparent border border-zinc-300 dark:border-zinc-600 rounded text-xs text-zinc-800 dark:text-zinc-200 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-zinc-400 p-3"
       />
 
-      <button
-        onClick={handleNormalize}
-        disabled={loading || !rawText.trim()}
-        className="shrink-0 flex items-center justify-center gap-1.5 text-xs px-3 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 transition-colors"
-      >
-        {loading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />解析中...</> : "转为规范格式"}
-      </button>
+      <div className="flex gap-2 shrink-0">
+        <button onClick={handleNormalize} disabled={loading || !rawText.trim()}
+          className="flex-1 flex items-center justify-center gap-1.5 text-xs px-3 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 transition-colors">
+          {loading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />解析中...</> : "转为规范格式"}
+        </button>
+        {(rawText || result) && (
+          <button onClick={() => { setRawText(""); setResult(""); }}
+            className="text-xs px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-500">
+            清除
+          </button>
+        )}
+      </div>
 
       {error && <p className="text-red-500 text-xs shrink-0">{error}</p>}
 
