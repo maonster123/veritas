@@ -60,11 +60,7 @@ export function useChat(initialNodeId: string | null) {
       });
     } else {
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
-      if (result.error === "MISSING_KEY") {
-        setError("请先在 AI 推荐面板设置 DeepSeek API Key");
-      } else {
-        setError(result.error ?? "发送失败");
-      }
+      setError(result.error ?? "发送失败");
     }
     setIsLoading(false);
   }, [isLoading]);

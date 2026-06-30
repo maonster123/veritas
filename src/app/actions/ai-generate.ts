@@ -12,14 +12,6 @@ export async function generateAIContent(nodeId: string): Promise<{ success: bool
     const session = await auth();
     if (!session?.user?.id) return { success: false, error: "请先登录" };
 
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { deepseekApiKey: true },
-    });
-    if (!currentUser?.deepseekApiKey) {
-      return { success: false, error: "MISSING_KEY" };
-    }
-
     const node = await prisma.outlineNode.findUnique({
       where: { id: nodeId },
       include: {
@@ -75,7 +67,7 @@ After each paragraph, provide an ACCURATE Chinese translation marked "【中文�
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${currentUser.deepseekApiKey}`,
+        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
         model: "deepseek-chat",
@@ -314,14 +306,6 @@ export async function normalizeCitation(
     }
 
     // ── Step 2: Fallback to AI ──
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { deepseekApiKey: true },
-    });
-    if (!currentUser?.deepseekApiKey) {
-      return { success: false, error: "MISSING_KEY" };
-    }
-
     const isEn = lang === "en";
 
     const sourceNote = doi
@@ -343,7 +327,7 @@ export async function normalizeCitation(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${currentUser.deepseekApiKey}`,
+        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
         model: "deepseek-chat",
@@ -380,12 +364,6 @@ export async function generateKeywords(
   try {
     const session = await auth();
     if (!session?.user?.id) return { success: false, error: "请先登录" };
-
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { deepseekApiKey: true },
-    });
-    if (!currentUser?.deepseekApiKey) return { success: false, error: "MISSING_KEY" };
 
     const project = await prisma.project.findUnique({
       where: { id: projectId },
@@ -444,7 +422,7 @@ CRITICAL RULES:
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${currentUser.deepseekApiKey}`,
+        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
         model: "deepseek-chat",

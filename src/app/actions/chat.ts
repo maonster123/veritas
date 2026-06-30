@@ -52,15 +52,6 @@ export async function sendMessage(
       return { success: false, error: "无权操作" };
     }
 
-    const session = await auth();
-    const currentUser = await prisma.user.findUnique({
-      where: { id: session!.user!.id },
-      select: { deepseekApiKey: true },
-    });
-    if (!currentUser?.deepseekApiKey) {
-      return { success: false, error: "MISSING_KEY" };
-    }
-
     // Load node context (including project lang for system prompt)
     const node = await prisma.outlineNode.findUnique({
       where: { id: nodeId },
@@ -123,7 +114,7 @@ Please assist the user with academic writing based on the above context.`
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${currentUser.deepseekApiKey}`,
+        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
       },
       body: JSON.stringify({
         model: "deepseek-chat",

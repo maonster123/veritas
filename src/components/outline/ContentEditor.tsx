@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { FlatNode } from "@/lib/outline-utils";
-import { generateAIContent, recommendResources, normalizeCitation, saveDeepseekKey } from "@/app/actions/ai-generate";
+import { generateAIContent, recommendResources, normalizeCitation } from "@/app/actions/ai-generate";
 import { sendMessage, getChatHistory } from "@/app/actions/chat";
 import { unlinkReference, linkReference } from "@/app/actions/outline";
 import { lookupAndSaveDOI, saveSimpleReference } from "@/app/actions/lookup-doi";
@@ -11,13 +11,12 @@ interface Props {
   node: FlatNode | null;
   onUpdate: (id: string, data: { content?: string; notes?: string }) => void;
   onReload: () => void;
-  hasApiKey: boolean;
   lang: string;
 }
 
 type AuxTab = "notes" | "ai" | "resources" | "chat" | "norm";
 
-export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lang }: Props) {
+export default function ContentEditor({ node, onUpdate, onReload, lang }: Props) {
   const [content, setContent] = useState("");
   const [notes, setNotes] = useState("");
   const [activeAux, setActiveAux] = useState<AuxTab>("notes");
@@ -71,13 +70,13 @@ export default function ContentEditor({ node, onUpdate, onReload, hasApiKey, lan
           {activeAux === "notes" ? (
             <NotesPanel notes={notes} setNotes={setNotes} saveNotes={() => onUpdate(node.id, { notes })} />
           ) : activeAux === "ai" ? (
-            <AITab node={node} hasApiKey={hasApiKey} />
+            <AITab node={node} />
           ) : activeAux === "resources" ? (
-            <ResourcesTab node={node} hasApiKey={hasApiKey} />
+            <ResourcesTab node={node} />
           ) : activeAux === "norm" ? (
-            <NormTab node={node} hasApiKey={hasApiKey} lang={lang} />
+            <NormTab node={node} lang={lang} />
           ) : (
-            <ChatTab node={node} hasApiKey={hasApiKey} />
+            <ChatTab node={node} />
           )}
         </div>
       </div>
@@ -134,12 +133,10 @@ function NotesPanel({ notes, setNotes, saveNotes }: { notes: string; setNotes: (
 
 // ── AI Content Generation ──
 
-function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
+function AITab({ node }: { node: FlatNode }) {
   const [aiContent, setAiContent] = useState(node.aiContent ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [needsKey, setNeedsKey] = useState(!hasApiKey);
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -152,23 +149,11 @@ function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
     setLoading(true); setError("");
     try {
       const result = await generateAIContent(node.id);
-      if (result.success && result.content) { setAiContent(result.content); setNeedsKey(false); }
-      else if (result.error === "MISSING_KEY") setNeedsKey(true);
+      if (result.success && result.content) { setAiContent(result.content); }
       else setError(result.error ?? "生成失败");
     } catch (e) { setError(e instanceof Error ? e.message : "生成失败"); }
     setLoading(false);
   };
-
-  const handleSaveKey = async () => {
-    if (!apiKey.trim()) return;
-    setLoading(true); setError("");
-    const r = await saveDeepseekKey(apiKey.trim());
-    if (r.success) { setNeedsKey(false); setApiKey(""); handleGenerate(); }
-    else setError(r.error ?? "保存失败");
-    setLoading(false);
-  };
-
-  if (needsKey === true) return <KeyInputForm apiKey={apiKey} setApiKey={setApiKey} onSave={handleSaveKey} loading={loading} error={error} />;
 
   return (
     <div className="flex flex-col min-h-[300px]">
@@ -195,12 +180,12 @@ function AITab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
 
 interface ResourceItem { name: string; url: string; description: string; needsVpn: boolean; citation: string; }
 
-function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
+function ResourcesTab({ node }: { node: FlatNode }) {
   const [resources, setResources] = useState<ResourceItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [needsKey, setNeedsKey] = useState(!hasApiKey);
+
+
   const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => { setResources([]); setError(""); setHasLoaded(false); }, [node.id]);
@@ -209,23 +194,11 @@ function ResourcesTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean 
     setLoading(true); setError("");
     try {
       const r = await recommendResources(node.id);
-      if (r.success && r.resources) { setResources(r.resources); setNeedsKey(false); setHasLoaded(true); }
-      else if (r.error === "MISSING_KEY") setNeedsKey(true);
+      if (r.success && r.resources) { setResources(r.resources); setHasLoaded(true); }
       else setError(r.error ?? "推荐失败");
     } catch (e) { setError(e instanceof Error ? e.message : "推荐失败"); }
     setLoading(false);
   };
-
-  const handleSaveKey = async () => {
-    if (!apiKey.trim()) return;
-    setLoading(true); setError("");
-    const r = await saveDeepseekKey(apiKey.trim());
-    if (r.success) { setNeedsKey(false); setApiKey(""); handleRecommend(); }
-    else setError(r.error ?? "保存失败");
-    setLoading(false);
-  };
-
-  if (needsKey === true) return <KeyInputForm apiKey={apiKey} setApiKey={setApiKey} onSave={handleSaveKey} loading={loading} error={error} />;
 
   return (
     <div className="flex flex-col min-h-[300px]">
@@ -444,7 +417,7 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
 
 // ── Citation Normalizer Tab ──
 
-function NormTab({ node, hasApiKey, lang }: { node: FlatNode; hasApiKey: boolean; lang: string }) {
+function NormTab({ node, lang }: { node: FlatNode; lang: string }) {
   const [rawText, setRawText] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -468,7 +441,6 @@ function NormTab({ node, hasApiKey, lang }: { node: FlatNode; hasApiKey: boolean
     setLoading(true); setError(""); setResult("");
     const r = await normalizeCitation(rawText.trim(), targetFormat, lang);
     if (r.success && r.citation) setResult(r.citation);
-    else if (r.error === "MISSING_KEY") setError("请先设置 API Key");
     else setError(r.error ?? "格式化失败");
     setLoading(false);
   };
@@ -553,22 +525,20 @@ const TEMPLATES: Record<string, string> = {
 
 // ── Chat Tab ──
 
-function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
+function ChatTab({ node }: { node: FlatNode }) {
   const [messages, setMessages] = useState<{ id: string; role: string; content: string; createdAt: Date }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [needsKey, setNeedsKey] = useState(!hasApiKey);
+
+
   const [input, setInput] = useState("");
   const nodeRef = useRef<string>("");
 
   useEffect(() => {
     nodeRef.current = node.id;
     setError("");
-    if (hasApiKey) {
-      getChatHistory(node.id).then(r => { if (r.success && nodeRef.current === node.id) setMessages(r.messages ?? []); });
-    }
-  }, [node.id, hasApiKey]);
+    getChatHistory(node.id).then(r => { if (r.success && nodeRef.current === node.id) setMessages(r.messages ?? []); });
+  }, [node.id]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -590,17 +560,10 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
       });
     } else {
       setMessages(prev => prev.filter(m => m.id !== userMsg.id));
-      if (r.error === "MISSING_KEY") setNeedsKey(true);
-      else setError(r.error ?? "发送失败");
+      setError(r.error ?? "发送失败");
     }
     setIsLoading(false);
   };
-
-  if (needsKey === true) return <KeyInputForm apiKey={apiKey} setApiKey={setApiKey} loading={isLoading} error={error} onSave={async () => {
-    if (!apiKey.trim()) return;
-    await saveDeepseekKey(apiKey.trim());
-    setNeedsKey(false); setApiKey("");
-  }} />;
 
   return (
     <div className="flex flex-col min-h-[350px]">
@@ -634,15 +597,3 @@ function ChatTab({ node, hasApiKey }: { node: FlatNode; hasApiKey: boolean }) {
   );
 }
 
-// ── Shared: API Key Input ──
-
-function KeyInputForm({ apiKey, setApiKey, onSave, loading, error }: { apiKey: string; setApiKey: (v: string) => void; onSave: () => void; loading: boolean; error: string }) {
-  return (
-    <div className="space-y-3">
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">请设置 DeepSeek API Key（<a href="https://platform.deepseek.com/api_keys" target="_blank" className="text-blue-600 underline">在此获取</a>）</p>
-      <input autoFocus type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} onKeyDown={e => { if (e.key === "Enter") onSave(); }} placeholder="sk-..." className="w-full text-sm bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-      <button onClick={onSave} disabled={loading} className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">{loading ? "保存中..." : "保存"}</button>
-      {error && <p className="text-red-500 text-xs">{error}</p>}
-    </div>
-  );
-}

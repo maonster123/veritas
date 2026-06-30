@@ -18,10 +18,9 @@ interface OutlineAppProps {
   keywords: string | null;
   titlePage: string | null;
   lang: string;
-  hasApiKey: boolean;
 }
 
-export default function OutlineApp({ projectId, title, subtitle, keywords, titlePage, lang, hasApiKey }: OutlineAppProps) {
+export default function OutlineApp({ projectId, title, subtitle, keywords, titlePage, lang }: OutlineAppProps) {
   const { state, dispatch, loadTree, select, handleAdd, handleUpdate, handleDelete, handleMove } =
     useOutlineTree(projectId);
 
@@ -118,7 +117,7 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
 
       {/* Right: Editor */}
       <div className="flex-1 min-w-0 min-h-0">
-        <ContentEditor node={selectedNode} onUpdate={handleUpdate} onReload={loadTree} hasApiKey={hasApiKey} lang={currentLang} />
+        <ContentEditor node={selectedNode} onUpdate={handleUpdate} onReload={loadTree} lang={currentLang} />
       </div>
 
       {showArchiveDialog && (

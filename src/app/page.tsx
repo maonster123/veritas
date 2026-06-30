@@ -24,11 +24,7 @@ export default async function Home({
       where: { id: projectId },
     });
     if (project && project.userId === session.user.id) {
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { deepseekApiKey: true },
-      });
-      return <OutlineApp projectId={project.id} title={project.title} subtitle={project.subtitle} keywords={project.keywords} titlePage={project.titlePage} lang={project.lang} hasApiKey={!!user?.deepseekApiKey} />;
+      return <OutlineApp projectId={project.id} title={project.title} subtitle={project.subtitle} keywords={project.keywords} titlePage={project.titlePage} lang={project.lang} />;
     }
   }
 
