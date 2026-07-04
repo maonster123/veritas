@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /auth/*
+Disallow: /api/*
+Disallow: /export/*
+
+Sitemap: https://www.dongguawriting.com/sitemap.xml
