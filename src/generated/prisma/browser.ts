@@ -73,6 +73,11 @@ export type CitationStyle = Prisma.CitationStyleModel
  */
 export type ProjectCitationStyle = Prisma.ProjectCitationStyleModel
 /**
+ * Model RateLimit
+ * 
+ */
+export type RateLimit = Prisma.RateLimitModel
+/**
  * Model ChatMessage
  * 
  */

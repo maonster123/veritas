@@ -243,7 +243,20 @@ model ProjectCitationStyle {
 }
 
 // ──────────────────────────────────────────────
-// 12. ChatMessage
+// 12. RateLimit
+// ──────────────────────────────────────────────
+
+model RateLimit {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, action, createdAt])
+}
+
+// ──────────────────────────────────────────────
+// 13. ChatMessage
 // ──────────────────────────────────────────────
 
 model ChatMessage {

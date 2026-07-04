@@ -3,7 +3,10 @@ node_modules/
 .env
 .env.*
 !.env.example
-dev.db
 *.zip
 *.tar.gz
 dev.db
+dev.db-wal
+dev.db-shm
+auth
+auth-wal

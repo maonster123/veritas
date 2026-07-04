@@ -62,6 +62,7 @@ export const ModelName = {
   FormatRule: 'FormatRule',
   CitationStyle: 'CitationStyle',
   ProjectCitationStyle: 'ProjectCitationStyle',
+  RateLimit: 'RateLimit',
   ChatMessage: 'ChatMessage'
 } as const
 
@@ -227,6 +228,16 @@ export const ProjectCitationStyleScalarFieldEnum = {
 } as const
 
 export type ProjectCitationStyleScalarFieldEnum = (typeof ProjectCitationStyleScalarFieldEnum)[keyof typeof ProjectCitationStyleScalarFieldEnum]
+
+
+export const RateLimitScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  createdAt: 'createdAt'
+} as const
+
+export type RateLimitScalarFieldEnum = (typeof RateLimitScalarFieldEnum)[keyof typeof RateLimitScalarFieldEnum]
 
 
 export const ChatMessageScalarFieldEnum = {

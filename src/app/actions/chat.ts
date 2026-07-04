@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, recordRateLimit, cleanupRateLimits } from "@/lib/rate-limit";
 
 const SYSTEM_PROMPT_ZH = `你是一名资深学术写作导师，你的任务是帮助用户在已有论文框架和内容的基础上进行写作，而不是替用户"写论文"。你的每一条建议都必须基于用户提供的大纲和正文内容。
 
@@ -51,6 +52,13 @@ export async function sendMessage(
     if (!(await verifyNodeOwnership(nodeId))) {
       return { success: false, error: "无权操作" };
     }
+
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: "请先登录" };
+
+    // Rate limit: 50 per hour for chat
+    const rl = await checkRateLimit(session.user.id, "chat", 50, 60);
+    if (!rl.allowed) return { success: false, error: `请求过于频繁，请 ${Math.ceil((rl.resetAt.getTime() - Date.now()) / 60000)} 分钟后再试` };
 
     // Load node context (including project lang for system prompt)
     const node = await prisma.outlineNode.findUnique({
@@ -138,6 +146,8 @@ Please assist the user with academic writing based on the above context.`
       data: { nodeId, role: "assistant", content: reply },
     });
 
+    await recordRateLimit(session.user.id, "chat");
+    await cleanupRateLimits();
     return { success: true, reply };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
