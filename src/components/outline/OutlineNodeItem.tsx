@@ -44,24 +44,28 @@ export default function OutlineNodeItem({ node, depth, selectedId, onSelect, onD
         className="flex items-center group"
         style={{
           marginLeft: depth * 16,
-          padding: "4px 8px",
-          borderRadius: 6,
+          padding: "5px 10px",
+          marginBottom: 1,
+          borderRadius: "var(--radius-sm)",
           cursor: "pointer",
           background: isSelected ? "var(--brand-subtle)" : "transparent",
-          border: isSelected ? "1px solid var(--brand)" : "1px solid transparent",
-          transition: "all 0.1s ease",
+          boxShadow: isSelected ? "0 0 0 1px var(--brand-glow)" : "none",
+          border: "1px solid transparent",
+          transition: "all 0.15s ease",
         }}
-        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = "var(--bg-hover)"; }}
-        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+        onMouseEnter={e => { if (!isSelected) { e.currentTarget.style.background = "var(--bg-hover)"; e.currentTarget.style.borderColor = "var(--border-default)"; } }}
+        onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; } }}
       >
         <button onClick={e => { e.stopPropagation(); setExpanded(!expanded); }}
-          style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-tertiary)", fontSize: 10, flexShrink: 0 }}>
+          style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-tertiary)", fontSize: 10, flexShrink: 0, borderRadius: 4, transition: "color 0.15s ease" }}
+          onMouseEnter={e => e.currentTarget.style.color = "var(--text-secondary)"}
+          onMouseLeave={e => e.currentTarget.style.color = "var(--text-tertiary)"}>
           {hasChildren ? (expanded ? "▾" : "▸") : "◦"}
         </button>
 
         <span style={{
-          fontSize: 10, padding: "1px 6px", borderRadius: 4, flexShrink: 0, marginLeft: 6,
-          background: "var(--bg-subtle)", color: "var(--text-tertiary)",
+          fontSize: 10, padding: "2px 6px", borderRadius: "var(--radius-xs)", flexShrink: 0, marginLeft: 6,
+          background: "var(--bg-subtle)", color: "var(--text-tertiary)", fontWeight: 500, letterSpacing: "0.02em",
         }}>
           {nodeTypeLabel(node.type)}
         </span>
@@ -78,19 +82,19 @@ export default function OutlineNodeItem({ node, depth, selectedId, onSelect, onD
           </span>
         )}
 
-        <div className="hidden group-hover:flex items-center gap-1 shrink-0 ml-1">
+        <div className="hidden group-hover:flex items-center gap-[2px] shrink-0 ml-1">
           {allowedChildTypes.length > 0 && (
             <button onClick={e => { e.stopPropagation(); setShowAdd(!showAdd); }}
-              style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "var(--text-tertiary)", borderRadius: 4 }}
-              onMouseEnter={e => e.currentTarget.style.color = "var(--brand)"}
-              onMouseLeave={e => e.currentTarget.style.color = "var(--text-tertiary)"}>
+              style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, color: "var(--text-tertiary)", borderRadius: "var(--radius-xs)", cursor: "pointer", transition: "all 0.15s ease", background: "transparent", border: "none" }}
+              onMouseEnter={e => { e.currentTarget.style.color = "var(--brand)"; e.currentTarget.style.background = "var(--brand-subtle)"; }}
+              onMouseLeave={e => { e.currentTarget.style.color = "var(--text-tertiary)"; e.currentTarget.style.background = "transparent"; }}>
               +
             </button>
           )}
           <button onClick={e => { e.stopPropagation(); if (confirm("Delete this node?")) onDelete(node.id); }}
-            style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "var(--text-tertiary)", borderRadius: 4 }}
-            onMouseEnter={e => e.currentTarget.style.color = "#ef4444"}
-            onMouseLeave={e => e.currentTarget.style.color = "var(--text-tertiary)"}>
+            style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: "var(--text-tertiary)", borderRadius: "var(--radius-xs)", cursor: "pointer", transition: "all 0.15s ease", background: "transparent", border: "none" }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.background = "rgba(239,68,68,0.08)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "var(--text-tertiary)"; e.currentTarget.style.background = "transparent"; }}>
             ×
           </button>
         </div>

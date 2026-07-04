@@ -69,34 +69,40 @@ export default function OutlineApp({ projectId, title, subtitle, keywords, title
 
   return (
     <div className="flex h-screen" style={{ background: "var(--bg-root)" }}>
-      {/* Left: Outline sidebar */}
-      <div className={`${sidebarW} shrink-0 flex flex-col border-r`} style={{ borderColor: "var(--border-default)", background: "var(--bg-surface)" }}>
+      {/* Left: Outline sidebar — glass panel */}
+      <div className={`${sidebarW} shrink-0 flex flex-col`} style={{
+        background: "var(--glass-bg)",
+        backdropFilter: "blur(var(--glass-blur))",
+        WebkitBackdropFilter: "blur(var(--glass-blur))",
+        borderRight: "1px solid var(--glass-border)",
+        boxShadow: "var(--shadow-sm)",
+      }}>
         <ProjectTitleBar projectId={projectId} title={title} subtitle={subtitle} />
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between px-[16px] py-[8px] border-b" style={{ borderColor: "var(--border-default)" }}>
+        <div className="flex items-center justify-between" style={{ padding: "10px 16px", borderBottom: "1px solid var(--border-default)" }}>
           <span className="heading-xs" style={{ color: "var(--text-secondary)" }}>{currentLang === "zh" ? "大纲" : "Outline"}</span>
-          <div className="flex items-center gap-[8px]">
+          <div className="flex items-center gap-[6px]">
             <button
               onClick={async () => { const nl = currentLang === "zh" ? "en" : "zh"; setCurrentLang(nl); await updateProjectLang(projectId, nl); }}
-              className="btn btn-ghost" style={{ height: 32, padding: "0 8px", fontSize: 12 }}
+              className="btn btn-ghost" style={{ height: 30, padding: "0 8px", fontSize: 12 }}
             >
               {currentLang === "zh" ? "中" : "EN"}
             </button>
-            <button onClick={() => setShowArchiveDialog(true)} className="btn btn-ghost" style={{ height: 32, fontSize: 12, padding: "0 8px" }}>
+            <button onClick={() => setShowArchiveDialog(true)} className="btn btn-ghost" style={{ height: 30, fontSize: 12, padding: "0 8px" }}>
               {currentLang === "zh" ? "存档" : "Archive"}
             </button>
-            <button onClick={() => setShowExportDialog(true)} className="btn btn-primary" style={{ height: 32, fontSize: 12, padding: "0 12px" }}>
+            <button onClick={() => setShowExportDialog(true)} className="btn btn-primary" style={{ height: 30, fontSize: 12, padding: "0 14px" }}>
               {currentLang === "zh" ? "导出" : "Export"}
             </button>
-            <button onClick={() => signOut({ callbackUrl: "/auth/login" })} className="btn btn-ghost" style={{ height: 32, fontSize: 12, padding: "0 8px" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <button onClick={() => signOut({ callbackUrl: "/auth/login" })} className="btn btn-ghost" style={{ height: 30, width: 30, fontSize: 12, padding: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
         </div>
 
         {/* Outline tree */}
-        <div className="flex-1 overflow-y-auto px-[8px] py-[8px]">
+        <div className="flex-1 overflow-y-auto" style={{ padding: "8px 10px" }}>
           {state.loading ? (
             <div className="text-center" style={{ padding: 24, color: "var(--text-tertiary)", fontSize: 14 }}>Loading...</div>
           ) : (

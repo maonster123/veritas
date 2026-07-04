@@ -27,7 +27,7 @@ export default function ProjectTitleBar({ projectId, title, subtitle }: Props) {
   };
 
   return (
-    <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border-default)" }}>
+    <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid var(--border-default)" }}>
       {editingTitle ? (
         <input autoFocus value={titleDraft} onChange={e => setTitleDraft(e.target.value)}
           onBlur={saveTitle} onKeyDown={e => { if (e.key === "Enter") saveTitle(); if (e.key === "Escape") setEditingTitle(false); }}

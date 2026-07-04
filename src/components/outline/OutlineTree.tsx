@@ -63,7 +63,13 @@ export default function OutlineTree({
       ) : (
         <button
           onClick={() => setShowAddRoot(true)}
-          className="mt-2 ml-6 text-sm text-zinc-400 hover:text-blue-600 transition-colors"
+          style={{
+            marginTop: 8, marginLeft: 24, fontSize: 13, color: "var(--text-tertiary)",
+            background: "none", border: "none", cursor: "pointer", padding: "4px 8px",
+            borderRadius: "var(--radius-xs)", transition: "all 0.15s ease",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = "var(--brand)"; e.currentTarget.style.background = "var(--bg-subtle)"; }}
+          onMouseLeave={e => { e.currentTarget.style.color = "var(--text-tertiary)"; e.currentTarget.style.background = "none"; }}
         >
           + 添加章
         </button>

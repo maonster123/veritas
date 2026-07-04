@@ -39,16 +39,21 @@ export default function ContentEditor({ node, onUpdate, onReload, lang }: Props)
   };
 
   return (
-    <div className="h-full grid grid-cols-[320px_1fr] min-h-0">
-      {/* ── Left: Auxiliary panel (tabs) ── */}
-      <div className="flex flex-col min-h-0" style={{ borderRight: "1px solid var(--border-default)", background: "var(--bg-surface)" }}>
+    <div className="h-full grid grid-cols-[400px_1fr] min-h-0">
+      {/* ── Left: Auxiliary panel — glass ── */}
+      <div className="flex flex-col min-h-0" style={{
+        background: "var(--glass-bg)",
+        backdropFilter: "blur(var(--glass-blur))",
+        WebkitBackdropFilter: "blur(var(--glass-blur))",
+        borderRight: "1px solid var(--glass-border)",
+      }}>
         {/* Node header */}
-        <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border-default)", flexShrink: 0 }}>
+        <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--border-default)", flexShrink: 0 }}>
           <h2 className="heading-sm truncate" style={{ color: "var(--text-primary)" }}>{node.title}</h2>
           {node.outlineReferences && node.outlineReferences.length > 0 && (
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 8 }}>
               {node.outlineReferences.map((or) => (
-                <span key={or.id} style={{ fontSize: 12, padding: "2px 8px", borderRadius: 4, background: "var(--brand-subtle)", color: "var(--brand)" }}>
+                <span key={or.id} style={{ fontSize: 11, padding: "2px 8px", borderRadius: "var(--radius-xs)", background: "var(--brand-subtle)", color: "var(--brand)", fontWeight: 500 }}>
                   {or.citationText || `[${or.reference.title}]`}
                 </span>
               ))}
@@ -57,12 +62,12 @@ export default function ContentEditor({ node, onUpdate, onReload, lang }: Props)
         </div>
 
         {/* Aux tabs */}
-        <div className="flex shrink-0" style={{ borderBottom: "1px solid var(--border-default)" }}>
-          <AuxTabButton active={activeAux === "notes"} onClick={() => setActiveAux("notes")}>{lang === "zh" ? "备注" : "Notes"}</AuxTabButton>
-          <AuxTabButton active={activeAux === "ai"} onClick={() => setActiveAux("ai")}>{lang === "zh" ? "AI推荐" : "AI"}</AuxTabButton>
-          <AuxTabButton active={activeAux === "resources"} onClick={() => setActiveAux("resources")}>{lang === "zh" ? "文献推荐" : "Resources"}</AuxTabButton>
-          <AuxTabButton active={activeAux === "chat"} onClick={() => setActiveAux("chat")}>{lang === "zh" ? "AI助手" : "Chat"}</AuxTabButton>
-          <AuxTabButton active={activeAux === "norm"} onClick={() => setActiveAux("norm")}>{lang === "zh" ? "引用规范" : "Cite"}</AuxTabButton>
+        <div className="flex shrink-0" style={{ borderBottom: "1px solid var(--border-default)", padding: "0 4px" }}>
+          <AuxTabButton active={activeAux === "notes"} onClick={() => setActiveAux("notes")} color="notes" icon={<NotesIcon />}>{lang === "zh" ? "备注" : "Notes"}</AuxTabButton>
+          <AuxTabButton active={activeAux === "ai"} onClick={() => setActiveAux("ai")} color="ai" icon={<AIIcon />}>{lang === "zh" ? "AI推荐" : "AI"}</AuxTabButton>
+          <AuxTabButton active={activeAux === "resources"} onClick={() => setActiveAux("resources")} color="resources" icon={<ResourcesIcon />}>{lang === "zh" ? "文献推荐" : "Resources"}</AuxTabButton>
+          <AuxTabButton active={activeAux === "chat"} onClick={() => setActiveAux("chat")} color="chat" icon={<ChatIcon />}>{lang === "zh" ? "AI助手" : "Chat"}</AuxTabButton>
+          <AuxTabButton active={activeAux === "norm"} onClick={() => setActiveAux("norm")} color="cite" icon={<CiteIcon />}>{lang === "zh" ? "引用规范" : "Cite"}</AuxTabButton>
         </div>
 
         {/* Aux content */}
@@ -81,20 +86,20 @@ export default function ContentEditor({ node, onUpdate, onReload, lang }: Props)
         </div>
       </div>
 
-      {/* ── Right: Content (always visible) ── */}
+      {/* ── Right: Content — warm surface ── */}
       <div className="flex flex-col min-h-0 min-w-0" style={{ background: "var(--bg-root)" }}>
-        <div className="flex items-center justify-between shrink-0" style={{ padding: "8px 24px", borderBottom: "1px solid var(--border-default)" }}>
+        <div className="flex items-center justify-between shrink-0" style={{ padding: "10px 24px", borderBottom: "1px solid var(--border-default)" }}>
           <span className="heading-xs" style={{ color: "var(--text-secondary)" }}>{lang === "zh" ? "正文" : "Content"}</span>
-          <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>Markdown</span>
+          <span style={{ fontSize: 11, color: "var(--text-tertiary)", fontWeight: 500, letterSpacing: "0.02em" }}>Markdown</span>
         </div>
         <div className="flex-1 overflow-y-auto" style={{ padding: 24 }}>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onBlur={saveContent}
-            placeholder="Start writing..."
+            placeholder={lang === "zh" ? "开始写作..." : "Start writing..."}
             className="w-full min-h-[400px] resize-none"
-            style={{ background: "transparent", border: "none", outline: "none", fontSize: 16, lineHeight: 1.6, color: "var(--text-primary)", fontFamily: "system-ui, sans-serif", height: "calc(100% - 48px)" }}
+            style={{ background: "transparent", border: "none", outline: "none", fontSize: 16, lineHeight: 1.75, color: "var(--text-primary)", fontFamily: "system-ui, sans-serif", height: "calc(100% - 48px)" }}
           />
         </div>
         <RefSection node={node} onReload={onReload} />
@@ -103,15 +108,12 @@ export default function ContentEditor({ node, onUpdate, onReload, lang }: Props)
   );
 }
 
-function AuxTabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function AuxTabButton({ active, onClick, children, color, icon }: { active: boolean; onClick: () => void; children: React.ReactNode; color: string; icon: React.ReactNode }) {
   return (
-    <button onClick={onClick}
-      style={{
-        padding: "8px 12px", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap",
-        color: active ? "var(--brand)" : "var(--text-tertiary)",
-        borderBottom: active ? "2px solid var(--brand)" : "2px solid transparent",
-        background: "transparent", cursor: "pointer", transition: "all 0.1s",
-      }}>
+    <button onClick={onClick} className={`tab-underline tab-${color}${active ? " active" : ""}`}>
+      <span className={`tab-icon-badge tab-icon-${color}`}>
+        {icon}
+      </span>
       {children}
     </button>
   );
@@ -126,7 +128,8 @@ function NotesPanel({ notes, setNotes, saveNotes }: { notes: string; setNotes: (
       onChange={(e) => setNotes(e.target.value)}
       onBlur={saveNotes}
       placeholder="个人备注（不会输出到最终文档）..."
-      className="w-full min-h-[300px] bg-transparent text-sm text-zinc-500 dark:text-zinc-400 resize-none focus:outline-none placeholder:text-zinc-400 italic"
+      className="w-full min-h-[300px] resize-none"
+      style={{ background: "transparent", border: "none", outline: "none", fontSize: 14, lineHeight: 1.75, color: "var(--text-secondary)", fontStyle: "italic" }}
     />
   );
 }
@@ -158,19 +161,19 @@ function AITab({ node }: { node: FlatNode }) {
   return (
     <div className="flex flex-col min-h-[300px]">
       <div className="flex items-center justify-between mb-3">
-        <button onClick={handleGenerate} disabled={loading} className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50">
+        <button onClick={handleGenerate} disabled={loading} className="btn" style={{ height: 32, fontSize: 12, padding: "0 12px", background: "linear-gradient(135deg, #c47da0, #8e4d6a)", color: "#fff", border: "none", boxShadow: "0 2px 8px rgba(196,125,160,0.25)" }}>
           {loading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />生成中...</> : "生成推荐内容"}
         </button>
-        <span className="text-[10px] text-zinc-400">仅供参考，请核实</span>
+        <span style={{ fontSize: 10, color: "var(--text-tertiary)" }}>仅供参考，请核实</span>
       </div>
       {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
       {aiContent ? (
-        <div className="relative">
-          <div ref={contentRef} onMouseUp={() => { const s = window.getSelection(); if (s?.toString()) { navigator.clipboard.writeText(s.toString()); setCopied(true); setTimeout(() => setCopied(false), 1500); } }} className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed select-text">{aiContent}</div>
-          {copied && <div className="absolute top-0 right-0 text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">已复制</div>}
+        <div className="relative animate-fade-in">
+          <div ref={contentRef} onMouseUp={() => { const s = window.getSelection(); if (s?.toString()) { navigator.clipboard.writeText(s.toString()); setCopied(true); setTimeout(() => setCopied(false), 1500); } }} className="text-sm whitespace-pre-wrap select-text" style={{ lineHeight: 1.75, color: "var(--text-primary)" }}>{aiContent}</div>
+          {copied && <div className="absolute top-0 right-0" style={{ fontSize: 11, padding: "2px 8px", borderRadius: "var(--radius-xs)", background: "var(--brand-subtle)", color: "var(--brand)" }}>已复制</div>}
         </div>
       ) : (
-        <div className="flex items-center justify-center flex-1 text-zinc-400 text-sm">点击生成获取 AI 写作建议</div>
+        <div className="flex items-center justify-center flex-1" style={{ fontSize: 14, color: "var(--text-tertiary)" }}>点击生成获取 AI 写作建议</div>
       )}
     </div>
   );
@@ -203,24 +206,24 @@ function ResourcesTab({ node }: { node: FlatNode }) {
   return (
     <div className="flex flex-col min-h-[300px]">
       <div className="flex items-center justify-between mb-3">
-        <button onClick={handleRecommend} disabled={loading} className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50">
+        <button onClick={handleRecommend} disabled={loading} className="btn" style={{ height: 32, fontSize: 12, padding: "0 12px", background: "linear-gradient(135deg, #5da88c, #3d7a64)", color: "#fff", border: "none", boxShadow: "0 2px 8px rgba(77,155,130,0.25)" }}>
           {loading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />搜索中...</> : "推荐文献资源"}
         </button>
-        <span className="text-[10px] text-zinc-400">网址来自训练数据</span>
+        <span style={{ fontSize: 10, color: "var(--text-tertiary)" }}>网址来自训练数据</span>
       </div>
       {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
       {resources.length > 0 && (
         <div className="flex-1 space-y-2 overflow-y-auto" style={{ overflowX: "hidden", wordBreak: "break-word" }}>
-          <div className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-center">
+          <div style={{ fontSize: 10, padding: "8px 12px", borderRadius: "var(--radius-sm)", background: "var(--bg-subtle)", color: "var(--text-secondary)", textAlign: "center", border: "1px solid var(--border-default)" }}>
             ⚠ Some websites may require VPN to access from China
           </div>
           {resources.map((r, i) => (
-            <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="block p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:border-emerald-400 transition-colors group">
+            <a key={i} href={r.url} target="_blank" rel="noopener noreferrer" className="block card animate-fade-in" style={{ padding: 12, marginBottom: 8 }}>
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-zinc-800 dark:text-zinc-200 group-hover:text-emerald-600 truncate">{r.name}</h4>
-                  <p className="text-xs text-zinc-500 mt-1 line-clamp-2">{r.description}</p>
-                  <p className="text-[10px] text-zinc-400 mt-1 truncate">{r.url}</p>
+                  <h4 className="text-sm font-medium truncate" style={{ color: "var(--text-primary)", transition: "color 0.15s ease" }}>{r.name}</h4>
+                  <p className="text-xs mt-1 line-clamp-2" style={{ color: "var(--text-secondary)", lineHeight: 1.6 }}>{r.description}</p>
+                  <p style={{ fontSize: 10, color: "var(--text-tertiary)", marginTop: 4 }} className="truncate">{r.url}</p>
                   {r.citation && (
                     <div className="mt-1.5 pt-1.5 border-t border-zinc-100 dark:border-zinc-800 flex items-start gap-1 group/cite">
                       <p className="flex-1 text-[10px] text-zinc-400 italic leading-relaxed select-all">
@@ -244,8 +247,8 @@ function ResourcesTab({ node }: { node: FlatNode }) {
           ))}
         </div>
       )}
-      {!hasLoaded && !error && <div className="flex items-center justify-center flex-1 text-zinc-400 text-sm">点击按钮获取相关学术网站</div>}
-      {hasLoaded && resources.length === 0 && !error && <div className="flex items-center justify-center flex-1 text-zinc-400 text-sm">未找到相关资源</div>}
+      {!hasLoaded && !error && <div className="flex items-center justify-center flex-1" style={{ fontSize: 14, color: "var(--text-tertiary)" }}>点击按钮获取相关学术网站</div>}
+      {hasLoaded && resources.length === 0 && !error && <div className="flex items-center justify-center flex-1" style={{ fontSize: 14, color: "var(--text-tertiary)" }}>未找到相关资源</div>}
     </div>
   );
 }
@@ -328,15 +331,18 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
   };
 
   return (
-    <div className="border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+    <div className="shrink-0" style={{ borderTop: "1px solid var(--border-default)" }}>
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="w-full px-4 py-2 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+        className="w-full flex items-center justify-between"
+        style={{ padding: "8px 16px", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", transition: "background 0.15s ease" }}
+        onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+        onMouseLeave={e => e.currentTarget.style.background = "none"}
       >
-        <span className="text-xs font-medium text-zinc-500">
+        <span style={{ fontSize: 12, fontWeight: 500 }}>
           本章引用 {refs.length > 0 ? `(${refs.length})` : ""}
         </span>
-        <span className="text-xs text-zinc-400">{collapsed ? "▸" : "▾"}</span>
+        <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{collapsed ? "▸" : "▾"}</span>
       </button>
       {!collapsed && (
         <div className="px-4 pb-3 space-y-2">
@@ -350,14 +356,14 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
                   <div key={or.id} className="flex items-start gap-2 group py-1">
                     <span className="text-[10px] text-zinc-400 mt-0.5 shrink-0">[{i + 1}]</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                      <p style={{ fontSize: 12, color: "var(--text-primary)", lineHeight: 1.6 }}>
                         {authors ? `${authors} ` : ""}({year}). {r.title}
                         {r.journal ? `. ${r.journal}` : ""}
                         {r.volume ? `, ${r.volume}` : ""}
                         {r.issue ? `(${r.issue})` : ""}
                         {r.pages ? `, ${r.pages}` : ""}.
                       </p>
-                      <p className="text-[10px] text-blue-500 dark:text-blue-400 mt-0.5">
+                      <p style={{ fontSize: 10, color: "var(--brand)", marginTop: 2 }}>
                         文内引用：{inTextCitation(r.authors, r.year)}
                       </p>
                     </div>
@@ -381,13 +387,13 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
           {!showAdder ? (
             <button
               onClick={() => setShowAdder(true)}
-              className="text-xs text-blue-500 hover:text-blue-600"
+              style={{ fontSize: 12, color: "var(--brand)", background: "none", border: "none", cursor: "pointer", padding: "4px 0", fontWeight: 500 }}
             >
               + 添加文献
             </button>
           ) : (
             <div className="space-y-2">
-              <p className="text-[10px] text-zinc-400">粘贴引用文本或 DOI 添加文献到本章：</p>
+              <p style={{ fontSize: 10, color: "var(--text-tertiary)" }}>粘贴引用文本或 DOI 添加文献到本章：</p>
               <div className="flex gap-2">
                 <input
                   value={doiInput}
@@ -395,18 +401,20 @@ function RefSection({ node, onReload }: { node: FlatNode; onReload: () => void }
                   onKeyDown={e => { if (e.key === "Enter") handleAddDoi(); }}
                   placeholder="粘贴引用文本、DOI 或 PubMed 格式"
                   disabled={adding}
-                  className="flex-1 text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="input-field"
+                  style={{ flex: 1, height: 32, fontSize: 12 }}
                 />
                 <button
                   onClick={handleAddDoi}
                   disabled={adding || !doiInput.trim()}
-                  className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                  className="btn btn-primary"
+                  style={{ height: 32, fontSize: 12, padding: "0 10px" }}
                 >
                   {adding ? "查找中..." : "添加"}
                 </button>
               </div>
-              {addError && <p className="text-red-500 text-[10px]">{addError}</p>}
-              <button onClick={() => { setShowAdder(false); setAddError(""); }} className="text-[10px] text-zinc-400 hover:text-zinc-600">取消</button>
+              {addError && <p style={{ color: "#ef4444", fontSize: 10 }}>{addError}</p>}
+              <button onClick={() => { setShowAdder(false); setAddError(""); }} className="btn btn-ghost" style={{ height: 24, fontSize: 10 }}>取消</button>
             </div>
           )}
         </div>
@@ -454,11 +462,12 @@ function NormTab({ node, lang }: { node: FlatNode; lang: string }) {
   return (
     <div className="flex flex-col h-full space-y-3">
       <div className="flex items-center gap-2 shrink-0">
-        <span className="text-xs text-zinc-500">目标格式：</span>
+        <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>目标格式：</span>
         <select
           value={targetFormat}
           onChange={e => setTargetFormat(e.target.value)}
-          className="text-xs bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-2 py-1"
+          className="input-field"
+          style={{ height: 30, fontSize: 12, padding: "0 6px" }}
         >
           {(lang === "zh"
             ? ["GB/T 7714"]
@@ -473,17 +482,18 @@ function NormTab({ node, lang }: { node: FlatNode; lang: string }) {
         value={rawText}
         onChange={e => setRawText(e.target.value)}
         placeholder="粘贴任意格式的参考文献，如 PMID 格式、PubMed 格式、或其他不规范格式..."
-        className="w-full h-32 bg-transparent border border-zinc-300 dark:border-zinc-600 rounded text-xs text-zinc-800 dark:text-zinc-200 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-zinc-400 p-3"
+        className="input-field"
+        style={{ width: "100%", height: 120, padding: 10, fontSize: 12, lineHeight: 1.6, resize: "none", fontFamily: "system-ui, sans-serif" }}
       />
 
       <div className="flex gap-2 shrink-0">
         <button onClick={handleNormalize} disabled={loading || !rawText.trim()}
-          className="flex-1 flex items-center justify-center gap-1.5 text-xs px-3 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50 transition-colors">
+          className="btn" style={{ flex: 1, height: 34, fontSize: 12, background: "linear-gradient(135deg, #d4915e, #b86838)", color: "#fff", border: "none", boxShadow: "0 2px 8px rgba(201,122,78,0.25)" }}>
           {loading ? <><span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />解析中...</> : "转为规范格式"}
         </button>
         {(rawText || result) && (
           <button onClick={() => { setRawText(""); setResult(""); }}
-            className="text-xs px-3 py-2 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-500">
+            className="btn btn-secondary" style={{ height: 34, fontSize: 12 }}>
             清除
           </button>
         )}
@@ -492,20 +502,19 @@ function NormTab({ node, lang }: { node: FlatNode; lang: string }) {
       {error && <p className="text-red-500 text-xs shrink-0">{error}</p>}
 
       {result && (
-        <div className="flex-1 flex flex-col min-h-0 space-y-2">
+        <div className="flex-1 flex flex-col min-h-0 space-y-2 animate-fade-in">
           <div className="flex items-center justify-between shrink-0">
-            <span className="text-[10px] text-zinc-400">{targetFormat} 格式</span>
-            <button onClick={handleCopy} className="text-[10px] px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded hover:bg-blue-100 hover:text-blue-600">
+            <span style={{ fontSize: 10, color: "var(--text-tertiary)" }}>{targetFormat} 格式</span>
+            <button onClick={handleCopy} className="btn btn-ghost" style={{ height: 24, fontSize: 10, padding: "0 8px" }}>
               {copied ? "已复制" : "复制"}
             </button>
           </div>
-          <div className="flex-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded p-3 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed overflow-y-auto select-all" style={{ wordBreak: "break-word" }}>
+          <div className="flex-1 overflow-y-auto select-all" style={{ padding: 12, borderRadius: "var(--radius-sm)", background: "var(--bg-subtle)", border: "1px solid var(--border-default)", fontSize: 12, lineHeight: 1.6, color: "var(--text-primary)", wordBreak: "break-word" }}>
             {result}
           </div>
-          {/* Template reference */}
-          <div className="shrink-0 bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 rounded-lg p-3">
-            <p className="text-[10px] text-zinc-400 mb-2 font-medium">{targetFormat} Journal Article Template</p>
-            <p className="text-[10px] text-zinc-500 dark:text-zinc-500 leading-relaxed" style={{ wordBreak: "break-word" }}>
+          <div className="shrink-0" style={{ padding: 10, borderRadius: "var(--radius-sm)", background: "var(--bg-subtle)", border: "1px solid var(--border-default)" }}>
+            <p style={{ fontSize: 10, color: "var(--text-tertiary)", marginBottom: 4, fontWeight: 500 }}>{targetFormat} Journal Article Template</p>
+            <p style={{ fontSize: 10, color: "var(--text-secondary)", lineHeight: 1.6, wordBreak: "break-word" }}>
               {TEMPLATES[targetFormat] ?? "Select a format"}
             </p>
           </div>
@@ -568,32 +577,94 @@ function ChatTab({ node }: { node: FlatNode }) {
   return (
     <div className="flex flex-col min-h-[350px]">
       <div className="space-y-3 mb-3" style={{ minHeight: "200px" }}>
-        {messages.length === 0 && !isLoading && <div className="text-center text-zinc-400 text-sm mt-4">向 AI 提问开始协作</div>}
+        {messages.length === 0 && !isLoading && <div style={{ textAlign: "center", fontSize: 14, color: "var(--text-tertiary)", marginTop: 16 }}>向 AI 提问开始协作</div>}
         {messages.map(msg => (
-          <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[90%] rounded-lg px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${msg.role === "user" ? "bg-blue-600 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200"}`}>
+          <div key={msg.id} className={`flex animate-fade-in ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div className={`max-w-[90%] text-sm leading-relaxed whitespace-pre-wrap`}
+              style={{
+                padding: "8px 14px",
+                borderRadius: "var(--radius-sm)",
+                fontSize: 14,
+                lineHeight: 1.65,
+                background: msg.role === "user" ? "var(--brand)" : "var(--bg-subtle)",
+                color: msg.role === "user" ? "#fff" : "var(--text-primary)",
+                boxShadow: msg.role === "user" ? "var(--shadow-glow)" : "none",
+              }}>
               {msg.content}
             </div>
           </div>
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg px-4 py-3">
+            <div style={{ padding: "10px 16px", borderRadius: "var(--radius-sm)", background: "var(--bg-subtle)" }}>
               <span className="inline-flex gap-1">
-                <span className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" />
-                <span className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                <span className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "var(--text-tertiary)" }} />
+                <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "var(--text-tertiary)", animationDelay: "150ms" }} />
+                <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "var(--text-tertiary)", animationDelay: "300ms" }} />
               </span>
             </div>
           </div>
         )}
       </div>
-      {error && <div className="mb-2 text-xs text-red-500 bg-red-50 dark:bg-red-950 rounded px-3 py-2 flex items-center justify-between"><span>{error}</span><button onClick={() => setError("")} className="text-red-400">&times;</button></div>}
+      {error && (
+        <div style={{ marginBottom: 8, fontSize: 12, padding: "8px 12px", borderRadius: "var(--radius-sm)", background: "rgba(239,68,68,0.06)", color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span>{error}</span>
+          <button onClick={() => setError("")} style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", fontSize: 14 }}>&times;</button>
+        </div>
+      )}
       <div className="flex gap-2 shrink-0">
-        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="输入消息..." disabled={isLoading} className="flex-1 text-sm bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-600 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50 placeholder:text-zinc-400" />
-        <button onClick={handleSend} disabled={isLoading} className="text-xs px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 shrink-0">发送</button>
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }} placeholder="输入消息..." disabled={isLoading} className="input-field" style={{ flex: 1, height: 38, fontSize: 13 }} />
+        <button onClick={handleSend} disabled={isLoading} className="btn" style={{ height: 38, fontSize: 13, padding: "0 16px", flexShrink: 0, background: "linear-gradient(135deg, #6b9fd4, #4a7ab5)", color: "#fff", border: "none", boxShadow: "0 2px 8px rgba(91,140,201,0.25)" }}>发送</button>
       </div>
     </div>
+  );
+}
+
+// ── Linear Icons (18px, stroke-width 1.5, per-tab colors) ──
+
+function NotesIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="rgba(255,255,255,0.7)" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" opacity="0.4" />
+      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+    </svg>
+  );
+}
+
+function AIIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="rgba(255,255,255,0.7)" strokeWidth="0.8" strokeLinejoin="round">
+      <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z" />
+      <path d="M12 15l.75 2.25L15 18l-2.25.75L12 21l-.75-2.25L9 18l2.25-.75z" opacity="0.6" />
+    </svg>
+  );
+}
+
+function ResourcesIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" opacity="0.3" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="none" />
+      <line x1="9" y1="7" x2="16" y2="7" stroke="rgba(0,0,0,0.15)" strokeWidth="1" />
+      <line x1="9" y1="11" x2="14" y2="11" stroke="rgba(0,0,0,0.15)" strokeWidth="1" />
+    </svg>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="rgba(255,255,255,0.7)" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+    </svg>
+  );
+}
+
+function CiteIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="rgba(255,255,255,0.7)" strokeWidth="0.8" strokeLinejoin="round">
+      <path d="M10 13H6V7h4v2H8v2h2v2z" />
+      <path d="M18 13h-4V7h4v2h-2v2h2v2z" />
+    </svg>
   );
 }
 
