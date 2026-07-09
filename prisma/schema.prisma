@@ -243,7 +243,46 @@ model ProjectCitationStyle {
 }
 
 // ──────────────────────────────────────────────
-// 12. RateLimit
+// 12. Subscription
+// ──────────────────────────────────────────────
+
+enum PlanType {
+  ONETIME
+  MONTHLY
+  YEARLY
+}
+
+model Subscription {
+  id         String    @id @default(uuid())
+  userId     String    @unique
+  plan       PlanType
+  aiLimit    Int       @default(0)
+  aiUsed     Int       @default(0)
+  projectLimit Int     @default(1)
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  paymentOrders PaymentOrder[]
+}
+
+model PaymentOrder {
+  id             String       @id @default(uuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+  plan           PlanType
+  amount         Float
+  provider       String       @default("wechat")
+  status         String       @default("pending")
+  paidAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([subscriptionId])
+  @@index([status])
+}
+
+// ──────────────────────────────────────────────
+// 13. RateLimit
 // ──────────────────────────────────────────────
 
 model RateLimit {

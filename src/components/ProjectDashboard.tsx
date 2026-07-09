@@ -68,10 +68,13 @@ export default function ProjectDashboard({ projects: initialProjects }: Props) {
             New Project
           </button>
 
-          <button onClick={() => signOut({ callbackUrl: "/auth/login" })}
-            className="w-full py-2 text-xs text-slate-500 hover:text-slate-300 transition-colors">
-            Sign Out
-          </button>
+          <div className="flex justify-center gap-4">
+            <a href="/pricing" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">定价</a>
+            <button onClick={() => signOut({ callbackUrl: "/auth/login" })}
+              className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Sign Out
+            </button>
+          </div>
         </div>
       </div>
     </div>

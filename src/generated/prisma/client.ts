@@ -97,6 +97,16 @@ export type CitationStyle = Prisma.CitationStyleModel
  */
 export type ProjectCitationStyle = Prisma.ProjectCitationStyleModel
 /**
+ * Model Subscription
+ * 
+ */
+export type Subscription = Prisma.SubscriptionModel
+/**
+ * Model PaymentOrder
+ * 
+ */
+export type PaymentOrder = Prisma.PaymentOrderModel
+/**
  * Model RateLimit
  * 
  */

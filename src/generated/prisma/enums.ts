@@ -36,3 +36,12 @@ export const CitationFormatType = {
 } as const
 
 export type CitationFormatType = (typeof CitationFormatType)[keyof typeof CitationFormatType]
+
+
+export const PlanType = {
+  ONETIME: 'ONETIME',
+  MONTHLY: 'MONTHLY',
+  YEARLY: 'YEARLY'
+} as const
+
+export type PlanType = (typeof PlanType)[keyof typeof PlanType]

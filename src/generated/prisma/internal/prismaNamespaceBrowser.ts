@@ -62,6 +62,8 @@ export const ModelName = {
   FormatRule: 'FormatRule',
   CitationStyle: 'CitationStyle',
   ProjectCitationStyle: 'ProjectCitationStyle',
+  Subscription: 'Subscription',
+  PaymentOrder: 'PaymentOrder',
   RateLimit: 'RateLimit',
   ChatMessage: 'ChatMessage'
 } as const
@@ -228,6 +230,35 @@ export const ProjectCitationStyleScalarFieldEnum = {
 } as const
 
 export type ProjectCitationStyleScalarFieldEnum = (typeof ProjectCitationStyleScalarFieldEnum)[keyof typeof ProjectCitationStyleScalarFieldEnum]
+
+
+export const SubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  plan: 'plan',
+  aiLimit: 'aiLimit',
+  aiUsed: 'aiUsed',
+  projectLimit: 'projectLimit',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SubscriptionScalarFieldEnum = (typeof SubscriptionScalarFieldEnum)[keyof typeof SubscriptionScalarFieldEnum]
+
+
+export const PaymentOrderScalarFieldEnum = {
+  id: 'id',
+  subscriptionId: 'subscriptionId',
+  plan: 'plan',
+  amount: 'amount',
+  provider: 'provider',
+  status: 'status',
+  paidAt: 'paidAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PaymentOrderScalarFieldEnum = (typeof PaymentOrderScalarFieldEnum)[keyof typeof PaymentOrderScalarFieldEnum]
 
 
 export const RateLimitScalarFieldEnum = {

@@ -26,6 +26,9 @@ export default function LandingContent() {
           </Link>
         </div>
         <p className="text-center text-xs text-slate-500">APA 7th · MLA 9th · IEEE · NLM · GB/T 7714</p>
+        <p className="text-center">
+          <Link href="/pricing" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">查看定价</Link>
+        </p>
       </div>
     </div>
   );
