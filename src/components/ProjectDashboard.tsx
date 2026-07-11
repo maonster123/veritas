@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CreateProjectForm from "@/components/CreateProjectForm";
+import OnboardingGuide from "@/components/OnboardingGuide";
 import { signOut } from "next-auth/react";
 import { deleteProject } from "@/app/actions/project";
 
@@ -12,6 +13,14 @@ interface Props {
 export default function ProjectDashboard({ projects: initialProjects }: Props) {
   const [showNew, setShowNew] = useState(false);
   const [projects, setProjects] = useState(initialProjects);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!localStorage.getItem("veritas-onboarding-seen")) {
+      setShowOnboarding(true);
+    }
+  }, []);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -68,8 +77,13 @@ export default function ProjectDashboard({ projects: initialProjects }: Props) {
             New Project
           </button>
 
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-4 items-center">
             <a href="/pricing" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">定价</a>
+            <button onClick={() => setShowOnboarding(true)}
+              className="w-6 h-6 rounded-full border border-slate-600 text-slate-500 hover:text-slate-300 hover:border-slate-400 text-[11px] flex items-center justify-center transition-colors"
+              title="帮助">
+              ?
+            </button>
             <button onClick={() => signOut({ callbackUrl: "/auth/login" })}
               className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
               Sign Out
@@ -77,6 +91,14 @@ export default function ProjectDashboard({ projects: initialProjects }: Props) {
           </div>
         </div>
       </div>
+      {showOnboarding && (
+        <OnboardingGuide
+          onClose={() => {
+            localStorage.setItem("veritas-onboarding-seen", "1");
+            setShowOnboarding(false);
+          }}
+        />
+      )}
     </div>
   );
 }
